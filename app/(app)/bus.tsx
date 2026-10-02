@@ -43,7 +43,7 @@ function BusBody({ childId, childName }: { childId: number; childName: string })
               <View style={[styles.stopDot, s.isChildStop ? { backgroundColor: colors.accent, borderColor: colors.accent } : null]} />
               <View style={{ flex: 1 }}>
                 <AppText style={{ fontFamily: s.isChildStop ? fonts.semibold : fonts.medium }}>{s.name}</AppText>
-                {s.isChildStop ? <AppText variant="caption" style={{ color: colors.accentInk, fontFamily: fonts.semibold, fontSize: 13, marginTop: 2 }}>{childName.split(' ')[0]}'s stop</AppText> : null}
+                {s.isChildStop ? <AppText variant="caption" style={{ color: colors.accentInk, fontFamily: fonts.semibold, fontSize: 13, marginTop: 2 }}>{`${firstName(childName)}'s stop`}</AppText> : null}
               </View>
               <AppText variant="caption">{clockFromTime(s.time) ?? ''}</AppText>
             </View>
