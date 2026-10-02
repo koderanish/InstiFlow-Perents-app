@@ -1,11 +1,12 @@
 import { Feather } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import type { ColorValue } from 'react-native';
 
 import { colors, fonts } from '@/theme';
 
 const icon = (name: React.ComponentProps<typeof Feather>['name']) =>
-  function TabIcon({ color, size }: { color: string; size: number }) {
-    return <Feather name={name} size={size} color={color} />;
+  function TabIcon({ color, size }: { color: ColorValue; size: number }) {
+    return <Feather name={name} size={size} color={color as string} />;
   };
 
 export default function TabsLayout() {
