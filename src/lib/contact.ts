@@ -1,3 +1,4 @@
+import { defaultT, type TFunction } from '@/i18n/translate';
 import type { SchoolContact } from '@/types/parent';
 
 /** Trimmed text, or null when there is nothing to show. */
@@ -25,14 +26,14 @@ export interface ContactAction {
 }
 
 /** Only the ways to reach the school that actually have a value. */
-export const contactActions = (school: SchoolContact): ContactAction[] => {
+export const contactActions = (school: SchoolContact, t: TFunction = defaultT): ContactAction[] => {
   const phone = present(school.phone);
   const email = present(school.email);
   const website = present(school.website);
   const out: ContactAction[] = [];
-  if (phone) out.push({ id: 'call', title: 'Call the school office', subtitle: phone, url: telUrl(phone) });
-  if (email) out.push({ id: 'email', title: 'Email the school', subtitle: email, url: mailUrl(email) });
-  if (website) out.push({ id: 'website', title: 'Visit the website', subtitle: website.replace(/^https?:\/\//i, ''), url: webUrl(website) });
+  if (phone) out.push({ id: 'call', title: t('account.contact.call'), subtitle: phone, url: telUrl(phone) });
+  if (email) out.push({ id: 'email', title: t('account.contact.email'), subtitle: email, url: mailUrl(email) });
+  if (website) out.push({ id: 'website', title: t('account.contact.website'), subtitle: website.replace(/^https?:\/\//i, ''), url: webUrl(website) });
   return out;
 };
 
