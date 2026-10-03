@@ -1,14 +1,17 @@
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useLocalSearchParams } from 'expo-router';
 import { Share, StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
+import { BackButton } from '@/components/learn/back-button';
 import { ChildGate } from '@/components/child-gate';
+import { CollapsingScreen } from '@/components/collapsing-screen';
 import { usePullRefresh } from '@/components/learn/hooks';
 import { HeroSurface, LearnSectionTitle } from '@/components/learn/learn-parts';
 import { PercentHero } from '@/components/learn/percent-hero';
-import { AppText, BackHeader, Card, EmptyState, ErrorState, ListCard, Loading, PrimaryButton, Screen } from '@/components/ui';
+import { AppText, Card, EmptyState, ErrorState, ListCard, Loading, PrimaryButton } from '@/components/ui';
 import { SCHOOL } from '@/config/school';
 import { useChildren, useResults } from '@/features/parent/hooks';
+import { useT } from '@/i18n';
 import { friendlyError } from '@/lib/errors';
 import { firstName } from '@/lib/format';
 import { formatMarks, marksSummary, reportCardText, resultBadge, resultPercent } from '@/lib/results';
@@ -16,14 +19,17 @@ import { successHaptic } from '@/motion/haptics';
 import { CountUp } from '@/motion/count-up';
 import { enterFade, enterRise } from '@/motion/presets';
 import { Reveal } from '@/motion/reveal';
-import { colors, fonts } from '@/theme';
+import { fonts, useStyles, useTheme, type Theme } from '@/theme';
 import type { ExamResult, ParentChild, SubjectResult } from '@/types/parent';
 
 const marksOutOf = (marks: number | null, max: number | null): string =>
   marks === null ? '—' : max !== null ? `${formatMarks(marks)} / ${formatMarks(max)}` : formatMarks(marks);
 
 function SubjectRow({ subject, index }: { subject: SubjectResult; index: number }) {
-  const spoken = `${subject.name}, ${marksOutOf(subject.marks, subject.maxMarks)}${subject.grade ? `, grade ${subject.grade}` : ''}`;
+  const t = useT();
+  const styles = useStyles(createStyles);
+  const marksText = `${subject.name}, ${marksOutOf(subject.marks, subject.maxMarks)}`;
+  const spoken = subject.grade ? t('learn.reportCard.spokenGrade', { text: marksText, grade: subject.grade }) : marksText;
   return (
     <Animated.View entering={enterRise(index)} accessible accessibilityLabel={spoken} style={[styles.row, styles.rowDivider]}>
       <View style={{ flex: 1 }}>
@@ -45,14 +51,17 @@ function SubjectRow({ subject, index }: { subject: SubjectResult; index: number 
 }
 
 function ReportCard({ child, result }: { child: ParentChild; result: ExamResult }) {
-  const badge = resultBadge(result);
+  const t = useT();
+  const styles = useStyles(createStyles);
+  const { colors } = useTheme();
+  const badge = resultBadge(result, t);
   const percent = resultPercent(result);
   const remarks = result.remarks?.trim();
 
   const share = async () => {
     try {
       const outcome = await Share.share({
-        message: reportCardText({ schoolName: SCHOOL.name, studentName: child.name, className: child.className || null, result }),
+        message: reportCardText({ schoolName: SCHOOL.name, studentName: child.name, className: child.className || null, result }, t),
       });
       if (outcome.action === Share.sharedAction) successHaptic();
     } catch {
@@ -86,7 +95,7 @@ function ReportCard({ child, result }: { child: ParentChild; result: ExamResult 
               {child.name}
             </AppText>
             <AppText variant="caption" style={{ marginTop: 2 }}>
-              {[child.className, child.admissionNo ? `Admission no. ${child.admissionNo}` : null].filter(Boolean).join(', ')}
+              {[child.className, child.admissionNo ? t('learn.reportCard.admissionNo', { no: child.admissionNo }) : null].filter(Boolean).join(', ')}
             </AppText>
           </View>
         </Card>
@@ -94,7 +103,7 @@ function ReportCard({ child, result }: { child: ParentChild; result: ExamResult 
 
       <Reveal index={1}>
         <HeroSurface padding={22}>
-          <PercentHero percent={percent} badge={badge} summary={marksSummary(result)} size={104} numeralSize={30} />
+          <PercentHero percent={percent} badge={badge} summary={marksSummary(result, t)} size={104} numeralSize={30} />
         </HeroSurface>
       </Reveal>
 
@@ -103,13 +112,13 @@ function ReportCard({ child, result }: { child: ParentChild; result: ExamResult 
           <ListCard>
             <View style={[styles.row, styles.rowDivider]}>
               <AppText variant="caption" style={{ flex: 1, fontSize: 13 }}>
-                Subject
+                {t('learn.reportCard.subject')}
               </AppText>
               <AppText variant="caption" style={[styles.marksCol, { fontSize: 13 }]}>
-                Marks
+                {t('learn.reportCard.marks')}
               </AppText>
               <AppText variant="caption" style={[styles.gradeCol, { fontSize: 13, fontFamily: fonts.body, color: colors.muted }]}>
-                Grade
+                {t('learn.reportCard.grade')}
               </AppText>
             </View>
             {result.subjects.map((s, i) => (
@@ -118,10 +127,14 @@ function ReportCard({ child, result }: { child: ParentChild; result: ExamResult 
             <Animated.View
               entering={enterRise(rows + 2)}
               accessible
-              accessibilityLabel={`Total, ${marksOutOf(result.totalMarks, result.maxTotal)}${result.grade ? `, grade ${result.grade}` : ''}`}
+              accessibilityLabel={
+                result.grade
+                  ? t('learn.reportCard.spokenGrade', { text: t('learn.reportCard.totalSpoken', { text: marksOutOf(result.totalMarks, result.maxTotal) }), grade: result.grade })
+                  : t('learn.reportCard.totalSpoken', { text: marksOutOf(result.totalMarks, result.maxTotal) })
+              }
               style={[styles.row, styles.totalRow]}
             >
-              <AppText style={{ flex: 1, fontFamily: fonts.bold, fontSize: 16 }}>Total</AppText>
+              <AppText style={{ flex: 1, fontFamily: fonts.bold, fontSize: 16 }}>{t('learn.reportCard.total')}</AppText>
               <AppText tabular style={[styles.marksCol, { fontFamily: fonts.semibold, color: colors.ink }]}>
                 {result.totalMarks === null ? (
                   '—'
@@ -140,15 +153,15 @@ function ReportCard({ child, result }: { child: ParentChild; result: ExamResult 
 
       {remarks ? (
         <Reveal index={3} style={{ gap: 20 }}>
-          <LearnSectionTitle title={`Teacher's remarks`} />
+          <LearnSectionTitle title={t('learn.reportCard.remarks')} />
           <Card style={{ padding: 18 }}>
-            <AppText style={{ fontFamily: fonts.body, fontSize: 15, lineHeight: 22, color: '#3B352F' }}>{remarks}</AppText>
+            <AppText style={{ fontFamily: fonts.body, fontSize: 15, lineHeight: 22, color: colors.ink }}>{remarks}</AppText>
           </Card>
         </Reveal>
       ) : null}
 
       <Reveal index={4}>
-        <PrimaryButton label="Share report card" onPress={() => void share()} />
+        <PrimaryButton label={t('learn.reportCard.share')} onPress={() => void share()} />
       </Reveal>
     </>
   );
@@ -156,17 +169,18 @@ function ReportCard({ child, result }: { child: ParentChild; result: ExamResult 
 
 function ReportCardBody({ child, examId }: { child: ParentChild; examId: number }) {
   const q = useResults(child.id);
+  const t = useT();
   if (q.isLoading) return <Loading />;
   if (q.isError || !q.data) return <ErrorState message={friendlyError(q.error)} onRetry={() => void q.refetch()} />;
   const result = q.data.results.find((r) => r.id === examId);
   if (!result) {
-    return <EmptyState title="Report card not available" message="We could not find this report card. It may not be published yet. Please contact the school office." />;
+    return <EmptyState title={t('learn.reportCard.unavailable')} message={t('learn.reportCard.unavailableMessage')} />;
   }
   return <ReportCard child={child} result={result} />;
 }
 
 export default function ReportCardScreen() {
-  const router = useRouter();
+  const t = useT();
   const refresh = usePullRefresh();
   const params = useLocalSearchParams<{ examId?: string }>();
   const examId = Number(params.examId);
@@ -175,19 +189,20 @@ export default function ReportCardScreen() {
   const result = results.data?.results.find((r) => r.id === examId);
   const subtitle = child ? [firstName(child.name), child.className, result?.name].filter(Boolean).join(', ') : undefined;
   return (
-    <Screen {...refresh} header={<BackHeader title="Report card" subtitle={subtitle} onBack={() => router.back()} />}>
+    <CollapsingScreen {...refresh} title={t('learn.reportCard.title')} subtitle={subtitle} leading={<BackButton />}>
       <ChildGate>{(selected) => <ReportCardBody child={selected} examId={examId} />}</ChildGate>
-    </Screen>
+    </CollapsingScreen>
   );
 }
 
-const styles = StyleSheet.create({
-  schoolRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  logo: { width: 48, height: 48, borderRadius: 16, backgroundColor: colors.accentTint, alignItems: 'center', justifyContent: 'center' },
-  studentRow: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.divider },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 18, paddingVertical: 14 },
-  rowDivider: { borderBottomWidth: 1, borderBottomColor: colors.divider },
-  totalRow: { backgroundColor: colors.accentTint, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
-  marksCol: { minWidth: 76, textAlign: 'right', fontSize: 15 },
-  gradeCol: { minWidth: 44, textAlign: 'right', fontFamily: fonts.bold, fontSize: 16, color: colors.ink },
-});
+const createStyles = ({ colors }: Theme) =>
+  StyleSheet.create({
+    schoolRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
+    logo: { width: 48, height: 48, borderRadius: 16, backgroundColor: colors.accentTint, alignItems: 'center', justifyContent: 'center' },
+    studentRow: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.divider },
+    row: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 18, paddingVertical: 14 },
+    rowDivider: { borderBottomWidth: 1, borderBottomColor: colors.divider },
+    totalRow: { backgroundColor: colors.accentTint, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
+    marksCol: { minWidth: 76, textAlign: 'right', fontSize: 15 },
+    gradeCol: { minWidth: 44, textAlign: 'right', fontFamily: fonts.bold, fontSize: 16, color: colors.ink },
+  });
