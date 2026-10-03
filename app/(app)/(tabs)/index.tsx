@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ChildChips } from '@/components/child-chips';
 import { ChildGate } from '@/components/child-gate';
+import { QuickLinks } from '@/components/quick-links';
 import { AppText, Card, Chip, ErrorState, ListCard, ListRow, Loading, Screen } from '@/components/ui';
 import { SCHOOL } from '@/config/school';
 import { useChildren, useToday } from '@/features/parent/hooks';
@@ -52,6 +53,7 @@ function TodayBody({ child, all }: { child: ParentChild; all: ParentChild[] }) {
           <ListRow key={r.title} title={r.title} subtitle={r.subtitle} dot={r.tone === 'neutral' ? undefined : r.tone} href={r.href} last={i === rows.length - 1} />
         ))}
       </ListCard>
+      <QuickLinks />
     </>
   );
 }

@@ -11,7 +11,7 @@ export type ReasonChoice = (typeof REASON_CHOICES)[number];
 
 export type LeaveCheck = { ok: true } | { ok: false; field: 'dates' | 'reason'; message: string };
 
-/** Same rules, and the same friendly wording, as the backend. */
+/** Quick checks before sending. The backend re-checks everything (including overlap with earlier notes) and is the final word. */
 export const validateLeave = (input: LeaveInput): LeaveCheck => {
   if (!isValidDay(input.startDate) || !isValidDay(input.endDate)) {
     return { ok: false, field: 'dates', message: 'Please choose the first and last day of the leave.' };
