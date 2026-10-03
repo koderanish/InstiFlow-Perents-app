@@ -39,6 +39,14 @@ const config: ExpoConfig = {
     'expo-router',
     'expo-secure-store',
     [
+      'expo-notifications',
+      {
+        // Android: the tint on the small status-bar icon and the channel alerts arrive on.
+        color: school.accent,
+        defaultChannel: 'default',
+      },
+    ],
+    [
       'expo-splash-screen',
       {
         backgroundColor: '#FAF7F4',

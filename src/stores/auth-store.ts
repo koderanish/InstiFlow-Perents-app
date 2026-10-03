@@ -6,6 +6,7 @@ import { ApiError } from '@/api/client';
 import { apiClient, authApi } from '@/api/services';
 import { secureTokenStorage } from '@/api/token-storage';
 import { SECURE_STORE_KEYS } from '@/constants/storage-keys';
+import { unregisterPush } from '@/notifications/service';
 import { hasParentRole, type AuthUser, type LoginCredentials } from '@/types/auth';
 
 export type AuthStatus = 'idle' | 'restoring' | 'authenticated' | 'unauthenticated';
@@ -100,6 +101,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
+    // Before the tokens are cleared, so the request is still signed in. Best effort and quick.
+    await unregisterPush();
     try {
       await authApi.logout();
     } catch {

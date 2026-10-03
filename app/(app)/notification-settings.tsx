@@ -4,6 +4,7 @@ import { View } from 'react-native';
 import { Hint } from '@/components/account/bits';
 import { useGoBack } from '@/components/account/nav';
 import { PrefRow } from '@/components/account/pref-row';
+import { PushCard } from '@/components/account/push-card';
 import { InsetList, Tray } from '@/components/account/surfaces';
 import { BackHeader, ListCard, Screen } from '@/components/ui';
 import { useT, type TKey } from '@/i18n';
@@ -29,6 +30,9 @@ export default function NotificationSettingsScreen() {
   return (
     <Screen header={<BackHeader title={t('account.notifications.title')} subtitle={t('account.notifications.subtitle')} onBack={goBack} />}>
       <Reveal index={0}>
+        <PushCard />
+      </Reveal>
+      <Reveal index={1}>
         <ListCard>
           {TOPICS.map((topic, i) => (
             <PrefRow
@@ -43,14 +47,14 @@ export default function NotificationSettingsScreen() {
           ))}
         </ListCard>
       </Reveal>
-      <Reveal index={1}>
+      <Reveal index={2}>
         <Tray>
           <InsetList>
             <PrefRow icon="moon" title={t('account.notifications.quiet')} subtitle={t('account.notifications.quietHint')} value={prefs.quietHours} onChange={(v) => set('quietHours', v)} last />
           </InsetList>
         </Tray>
       </Reveal>
-      <Reveal index={2}>
+      <Reveal index={3}>
         <View style={{ gap: 8 }}>
           <Hint>{t('account.notifications.hint1')}</Hint>
           <Hint>{t('account.notifications.hint2')}</Hint>
