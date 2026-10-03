@@ -32,6 +32,13 @@ export const monthGrid = (month: string, days: { date: string; status: string }[
   return cells;
 };
 
+/** Soft background for a day cell: the status colour at about 15% opacity. */
+export const statusTint = (status: string | null): string => {
+  if (!status) return 'transparent';
+  const solid = statusColor(status);
+  return solid === 'transparent' ? solid : `${solid}26`;
+};
+
 export const statusColor = (status: string): string => {
   switch (status) {
     case 'present':

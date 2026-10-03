@@ -1,59 +1,75 @@
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { ChildChips } from '@/components/child-chips';
 import { ChildGate } from '@/components/child-gate';
 import { useNow, usePullRefresh } from '@/components/learn/hooks';
-import { LearnSectionTitle, LearnSegmented, type SegmentOption } from '@/components/learn/learn-parts';
-import { AppText, BackHeader, Card, Chip, EmptyState, ErrorState, Loading, Screen } from '@/components/ui';
+import { LearnSectionTitle, PulseDot } from '@/components/learn/learn-parts';
+import { AppText, BackHeader, Card, EmptyState, ErrorState, Loading, Screen } from '@/components/ui';
 import { useChildren, useTimetable } from '@/features/parent/hooks';
 import { friendlyError } from '@/lib/errors';
 import { firstName } from '@/lib/format';
 import { SCHOOL_DAYS, currentSlotIndex, defaultDayIndex, groupByDay, periodCount, periodLabel, slotTimeRange, weekdayIndex } from '@/lib/timetable';
-import { colors, fonts } from '@/theme';
+import { enterFade, enterRise } from '@/motion/presets';
+import { Reveal } from '@/motion/reveal';
+import { Segmented, type SegmentOption } from '@/motion/segmented';
+import { colors, fonts, shadow } from '@/theme';
 import type { ParentChild, TimetableSlot } from '@/types/parent';
 
-function BreakRow({ slot, now: isNow }: { slot: TimetableSlot; now: boolean }) {
+/** Breaks stay quiet: no card, just a label between two hairlines. */
+function BreakRow({ slot, now: isNow, index }: { slot: TimetableSlot; now: boolean; index: number }) {
   const label = slot.subject?.trim() || periodLabel(slot.period) || 'Break';
   const range = slotTimeRange(slot);
   return (
-    <View accessible accessibilityLabel={`${label}, ${range}${isNow ? ', now' : ''}`} style={[styles.breakRow, isNow && { backgroundColor: colors.accentTint }]}>
-      <AppText variant="caption" style={{ fontSize: 14, fontFamily: fonts.medium }}>
-        {label}
-      </AppText>
-      <AppText variant="caption" style={{ fontSize: 13 }}>
-        {range}
-      </AppText>
-      {isNow ? <Chip label="Now" tone="good" /> : null}
-    </View>
+    <Animated.View entering={enterFade(index)} accessible accessibilityLabel={`${label}, ${range}${isNow ? ', now' : ''}`} style={styles.breakRow}>
+      <View style={styles.breakLine} />
+      <View style={[styles.breakLabel, isNow && { backgroundColor: colors.accentTint }]}>
+        {isNow ? <PulseDot size={6} /> : null}
+        <AppText variant="caption" numberOfLines={1} ellipsizeMode="tail" style={{ fontSize: 13, fontFamily: fonts.medium, flexShrink: 1 }}>
+          {label}
+        </AppText>
+        <AppText variant="caption" tabular style={{ fontSize: 13, color: colors.faint }}>
+          {range}
+        </AppText>
+      </View>
+      <View style={styles.breakLine} />
+    </Animated.View>
   );
 }
 
-function PeriodCard({ slot, now: isNow }: { slot: TimetableSlot; now: boolean }) {
+function PeriodCard({ slot, now: isNow, index }: { slot: TimetableSlot; now: boolean; index: number }) {
   const subject = slot.subject?.trim() || 'Free period';
   const range = slotTimeRange(slot);
   const spoken = [periodLabel(slot.period), subject, slot.teacher, range, isNow ? 'now' : null].filter(Boolean).join(', ');
   return (
-    <View accessible accessibilityLabel={spoken} style={[styles.period, isNow && { backgroundColor: colors.accentTint, borderColor: colors.accent }]}>
+    <Animated.View entering={enterRise(index)} accessible accessibilityLabel={spoken} style={[styles.period, isNow && styles.periodNow]}>
       <View style={{ flex: 1 }}>
         <View style={styles.periodTop}>
-          <AppText variant="caption" style={{ fontSize: 13, fontFamily: fonts.medium }}>
+          <AppText variant="caption" numberOfLines={1} ellipsizeMode="tail" style={{ fontSize: 13, fontFamily: fonts.medium, flexShrink: 1 }}>
             {periodLabel(slot.period)}
           </AppText>
-          {isNow ? <Chip label="Now" tone="good" /> : null}
+          {isNow ? (
+            <View style={styles.nowTag}>
+              <PulseDot />
+              <AppText style={{ fontFamily: fonts.bold, fontSize: 13, color: colors.accentInk }}>Now</AppText>
+            </View>
+          ) : null}
         </View>
-        <AppText style={{ fontFamily: fonts.semibold, fontSize: 18, letterSpacing: -0.2, marginTop: 4 }}>{subject}</AppText>
+        <AppText numberOfLines={2} ellipsizeMode="tail" style={{ fontFamily: fonts.semibold, fontSize: 18, letterSpacing: -0.2, marginTop: 4 }}>
+          {subject}
+        </AppText>
         {slot.teacher ? (
-          <AppText variant="caption" style={{ marginTop: 2 }}>
+          <AppText variant="caption" numberOfLines={1} ellipsizeMode="tail" style={{ marginTop: 2 }}>
             {slot.teacher}
           </AppText>
         ) : null}
-        <AppText variant="caption" style={{ fontSize: 13, color: isNow ? colors.accentInk : colors.faint, marginTop: 6 }}>
+        <AppText variant="caption" tabular style={{ fontSize: 13, color: isNow ? colors.accentInk : colors.faint, marginTop: 6 }}>
           {range}
         </AppText>
       </View>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -90,19 +106,27 @@ function TimetableBody({ child, all }: { child: ParentChild; all: ParentChild[] 
   return (
     <>
       <ChildChips items={all} selectedId={child.id} />
-      <LearnSegmented options={options} value={String(selected)} onChange={(key) => setPicked(Number(key))} label="Day of the week" />
+      <Reveal index={0}>
+        <Segmented options={options} value={String(selected)} onChange={(key) => setPicked(Number(key))} label="Day of the week" />
+      </Reveal>
       <LearnSectionTitle
         title={selected === today ? `${day.long}, today` : day.long}
         caption={classes > 0 ? `${classes} ${classes === 1 ? 'class' : 'classes'}` : null}
       />
       {daySlots.length === 0 ? (
-        <Card>
-          <EmptyState title={`No classes on ${day.long}`} message="Nothing is scheduled for this day." />
-        </Card>
+        <Animated.View key={selected} entering={enterFade()}>
+          <Card>
+            <EmptyState title={`No classes on ${day.long}`} message="Nothing is scheduled for this day." />
+          </Card>
+        </Animated.View>
       ) : (
-        <View style={{ gap: 10 }}>
+        <View key={selected} style={{ gap: 10 }}>
           {daySlots.map((slot, i) =>
-            slot.isBreak ? <BreakRow key={`${slot.period}-${slot.start}`} slot={slot} now={i === nowIndex} /> : <PeriodCard key={`${slot.period}-${slot.start}`} slot={slot} now={i === nowIndex} />,
+            slot.isBreak ? (
+              <BreakRow key={`${slot.period}-${slot.start}`} slot={slot} now={i === nowIndex} index={i} />
+            ) : (
+              <PeriodCard key={`${slot.period}-${slot.start}`} slot={slot} now={i === nowIndex} index={i} />
+            ),
           )}
         </View>
       )}
@@ -129,23 +153,15 @@ const styles = StyleSheet.create({
   period: {
     backgroundColor: colors.card,
     borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
     paddingVertical: 14,
     paddingHorizontal: 18,
     flexDirection: 'row',
+    ...shadow.card,
   },
+  periodNow: { backgroundColor: colors.accentTint },
   periodTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
-  breakRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 10,
-    flexWrap: 'wrap',
-    minHeight: 44,
-    paddingHorizontal: 18,
-    paddingVertical: 8,
-    borderRadius: 16,
-    backgroundColor: colors.divider,
-  },
+  nowTag: { flexDirection: 'row', alignItems: 'center', gap: 2, marginVertical: -8 },
+  breakRow: { flexDirection: 'row', alignItems: 'center', gap: 10, minHeight: 32, paddingHorizontal: 4 },
+  breakLine: { flex: 1, height: 1, backgroundColor: colors.border },
+  breakLabel: { flexDirection: 'row', alignItems: 'center', gap: 6, flexShrink: 1, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 14 },
 });
