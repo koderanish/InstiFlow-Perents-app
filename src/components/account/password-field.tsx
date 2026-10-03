@@ -1,4 +1,4 @@
-import { useState, type Ref } from 'react';
+import { useState, type ReactNode, type Ref } from 'react';
 import { StyleSheet, type TextInput, type TextInputProps } from 'react-native';
 
 import { IconSwap } from '@/components/account/icon-swap';
@@ -17,7 +17,9 @@ export function PasswordField({
   onSubmitEditing,
   inputRef,
   error,
+  left,
 }: {
+  left?: ReactNode;
   label: string;
   value: string;
   onChangeText: (text: string) => void;
@@ -34,6 +36,7 @@ export function PasswordField({
     <TextField
       label={label}
       error={error}
+      left={left}
       inputRef={inputRef}
       autoCapitalize="none"
       autoCorrect={false}

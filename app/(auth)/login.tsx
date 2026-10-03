@@ -1,14 +1,16 @@
 import { useRef, useState } from 'react';
+import { Feather } from '@expo/vector-icons';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, type TextInput, View } from 'react-native';
 import Animated from 'react-native-reanimated';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ErrorBanner } from '@/components/account/error-banner';
+import { LoginHero } from '@/components/account/login-hero';
 import { Glide, useShake } from '@/components/account/motion-bits';
 import { PasswordField } from '@/components/account/password-field';
 import { TextField } from '@/components/account/text-field';
+import { IconBadge } from '@/components/icon-badge';
 import { AppText, PrimaryButton } from '@/components/ui';
-import { SCHOOL } from '@/config/school';
 import { useT } from '@/i18n';
 import { isOffline } from '@/lib/errors';
 import { Reveal } from '@/motion/reveal';
@@ -17,6 +19,7 @@ import { fonts, useStyles, useTheme, type Theme } from '@/theme';
 
 export default function LoginScreen() {
   const styles = useStyles(createStyles);
+  const insets = useSafeAreaInsets();
   const { colors } = useTheme();
   const t = useT();
   const login = useAuthStore((s) => s.login);
@@ -49,77 +52,89 @@ export default function LoginScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.screen}>
+    <View style={styles.screen}>
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" showsVerticalScrollIndicator={false}>
-          <Reveal index={0}>
-            <View style={styles.logo}>
-              <AppText style={{ fontFamily: fonts.bold, fontSize: 24, color: colors.accentInk }}>{SCHOOL.shortName}</AppText>
-            </View>
-            <AppText variant="caption" style={{ marginTop: 16, fontFamily: fonts.medium }}>{SCHOOL.name}</AppText>
-          </Reveal>
-          <Reveal index={1}>
-            <AppText variant="title" style={{ fontSize: 34, lineHeight: 37, marginTop: 8 }}>{t('account.login.welcome')}</AppText>
-          </Reveal>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+          showsVerticalScrollIndicator={false}
+          bounces={false}
+        >
+          <LoginHero topInset={insets.top} />
 
-          <Reveal index={2} style={{ marginTop: 36 }}>
-            <Animated.View style={[{ gap: 18 }, shakeStyle]}>
-              <TextField
-                label={t('account.login.email')}
-                error={!!error}
-                autoCapitalize="none"
-                autoComplete="email"
-                autoCorrect={false}
-                keyboardType="email-address"
-                placeholder="you@example.com"
-                returnKeyType="next"
-                value={email}
-                onChangeText={edit(setEmail)}
-                onSubmitEditing={() => passwordRef.current?.focus()}
-              />
-              <PasswordField
-                inputRef={passwordRef}
-                label={t('account.login.password')}
-                error={!!error}
-                autoComplete="password"
-                returnKeyType="go"
-                value={password}
-                onChangeText={edit(setPassword)}
-                onSubmitEditing={() => void submit()}
-              />
-              {error ? <ErrorBanner message={error} /> : null}
-              <Glide>
-                <PrimaryButton label={t('account.login.submit')} onPress={() => void submit()} loading={busy} disabled={!canSubmit} />
-              </Glide>
-            </Animated.View>
-          </Reveal>
+          <Reveal index={1} style={styles.sheetWrap}>
+            <View style={styles.sheet}>
+              <AppText variant="title" style={{ fontSize: 26, lineHeight: 30 }}>{t('account.login.welcome')}</AppText>
+              <Animated.View style={[{ gap: 18, marginTop: 22 }, shakeStyle]}>
+                <TextField
+                  label={t('account.login.email')}
+                  error={!!error}
+                  left={<Feather name="mail" size={18} color={colors.faint} />}
+                  autoCapitalize="none"
+                  autoComplete="email"
+                  autoCorrect={false}
+                  keyboardType="email-address"
+                  placeholder="you@example.com"
+                  returnKeyType="next"
+                  value={email}
+                  onChangeText={edit(setEmail)}
+                  onSubmitEditing={() => passwordRef.current?.focus()}
+                />
+                <PasswordField
+                  inputRef={passwordRef}
+                  label={t('account.login.password')}
+                  error={!!error}
+                  left={<Feather name="lock" size={18} color={colors.faint} />}
+                  autoComplete="password"
+                  returnKeyType="go"
+                  value={password}
+                  onChangeText={edit(setPassword)}
+                  onSubmitEditing={() => void submit()}
+                />
+                {error ? <ErrorBanner message={error} /> : null}
+                <Glide>
+                  <PrimaryButton label={t('account.login.submit')} onPress={() => void submit()} loading={busy} disabled={!canSubmit} />
+                </Glide>
+              </Animated.View>
 
-          <Reveal index={3}>
-            <View style={{ gap: 2, alignItems: 'center', paddingHorizontal: 8, marginTop: 18 }}>
-              <AppText variant="caption" style={{ fontSize: 14, lineHeight: 20, textAlign: 'center' }}>
-                {t('account.login.forgot')}
-              </AppText>
-              <AppText variant="caption" style={{ fontSize: 13, fontFamily: fonts.semibold, textAlign: 'center' }}>
-                {SCHOOL.name}
-              </AppText>
+              <View style={styles.help}>
+                <IconBadge name="help-circle" size={36} />
+                <View style={{ flex: 1 }}>
+                  <AppText style={{ fontFamily: fonts.semibold, fontSize: 14 }}>{t('account.login.helpTitle')}</AppText>
+                  <AppText variant="caption" style={{ fontSize: 13, lineHeight: 18, marginTop: 2 }}>
+                    {t('account.login.forgot')}
+                  </AppText>
+                </View>
+              </View>
             </View>
           </Reveal>
 
           <View style={styles.footer}>
-            <View style={styles.footerMark} />
-            <AppText variant="caption" style={{ fontSize: 13 }}>{t('account.poweredBy')}</AppText>
+            <View style={styles.secure}>
+              <Feather name="shield" size={13} color={colors.faint} />
+              <AppText variant="caption" style={{ fontSize: 12 }}>{t('account.login.secure')}</AppText>
+            </View>
+            <View style={styles.secure}>
+              <View style={styles.footerMark} />
+              <AppText variant="caption" style={{ fontSize: 13 }}>{t('account.poweredBy')}</AppText>
+            </View>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 
-const createStyles = ({ colors }: Theme) =>
+const createStyles = ({ colors, shadow }: Theme) =>
   StyleSheet.create({
     screen: { flex: 1, backgroundColor: colors.bg },
-    content: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 64, paddingBottom: 28 },
-    logo: { width: 64, height: 64, borderRadius: 20, backgroundColor: colors.accentTint, alignItems: 'center', justifyContent: 'center' },
-    footer: { marginTop: 'auto', paddingTop: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+    content: { flexGrow: 1 },
+    // The form card overlaps the gradient so the two read as one surface.
+    sheetWrap: { marginTop: -32 },
+    sheet: { backgroundColor: colors.bg, borderTopLeftRadius: 32, borderTopRightRadius: 32, paddingHorizontal: 24, paddingTop: 28, paddingBottom: 8 },
+    help: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 24, padding: 14, borderRadius: 20, backgroundColor: colors.card, ...shadow.card },
+    footer: { marginTop: 'auto', paddingTop: 28, paddingBottom: 28, gap: 10, alignItems: 'center' },
+    secure: { flexDirection: 'row', alignItems: 'center', gap: 6 },
     footerMark: { width: 14, height: 14, borderRadius: 4, backgroundColor: colors.accent },
   });
