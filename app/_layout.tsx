@@ -10,7 +10,7 @@ import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet } from 'react-native';
+import { AppState, StyleSheet } from 'react-native';
 import Animated, { FadeOut, ReduceMotion } from 'react-native-reanimated';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -79,6 +79,14 @@ function RootShell() {
   useEffect(() => {
     void restoreBranding().then(() => refreshBranding());
   }, [restoreBranding, refreshBranding]);
+
+  // Coming back to the app picks up a new logo or colour without a restart.
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (next) => {
+      if (next === 'active') void refreshBranding();
+    });
+    return () => sub.remove();
+  }, [refreshBranding]);
 
   const ready = fontsLoaded && prefsReady && brandingReady && (status === 'authenticated' || status === 'unauthenticated');
 
