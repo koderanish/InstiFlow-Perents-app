@@ -1,18 +1,26 @@
+import { Feather } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Link, type Href } from 'expo-router';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useEffect, type PropsWithChildren } from 'react';
+import { StyleSheet, View, type ViewStyle } from 'react-native';
+import Animated, { cancelAnimation, Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 
+import { IconBadge } from '@/components/icon-badge';
 import { AppText } from '@/components/ui';
-import { colors, fonts, shadow } from '@/theme';
+import { AnimatedBar } from '@/motion/animated-bar';
+import { PressableScale } from '@/motion/pressable-scale';
+import { staggerDelay } from '@/motion/tokens';
+import { colors, fonts, radius, shadow } from '@/theme';
 
 /** Heading above a card, as on the approved boards ("Date sheet"). */
 export function LearnSectionTitle({ title, caption }: { title: string; caption?: string | null }) {
   return (
     <View style={styles.sectionTitle}>
-      <AppText accessibilityRole="header" style={{ fontFamily: fonts.semibold, fontSize: 17 }}>
+      <AppText accessibilityRole="header" numberOfLines={1} ellipsizeMode="tail" style={{ fontFamily: fonts.semibold, fontSize: 17 }}>
         {title}
       </AppText>
       {caption ? (
-        <AppText variant="caption" style={{ fontSize: 13, marginTop: 2 }}>
+        <AppText variant="caption" tabular style={{ fontSize: 13, marginTop: 2 }}>
           {caption}
         </AppText>
       ) : null}
@@ -28,7 +36,7 @@ export function LearnTitle({ title, subtitle }: { title: string; subtitle?: stri
         {title}
       </AppText>
       {subtitle ? (
-        <AppText variant="caption" style={{ fontSize: 15, marginTop: 4 }}>
+        <AppText variant="caption" numberOfLines={1} ellipsizeMode="tail" style={{ fontSize: 15, marginTop: 4 }}>
           {subtitle}
         </AppText>
       ) : null}
@@ -36,61 +44,35 @@ export function LearnTitle({ title, subtitle }: { title: string; subtitle?: stri
   );
 }
 
-export interface SegmentOption<K extends string> {
-  key: K;
-  label: string;
-  /** Spoken label, when the visible one is short ("Mon" -> "Monday"). */
-  spoken?: string;
-  /** Small marker under the label, e.g. today. */
-  dot?: boolean;
-}
+/** Shadow shell for a hero block. Outer radius 28 = inner radius + padding is handled by `HeroFill`. */
+export const heroShell = StyleSheet.flatten<ViewStyle>([{ borderRadius: radius.hero, backgroundColor: colors.card }, shadow.card]);
 
-/** Pill selector: day of the week, homework filter. At least 44pt tall. */
-export function LearnSegmented<K extends string>({
-  options,
-  value,
-  onChange,
-  label,
-}: {
-  options: SegmentOption<K>[];
-  value: K;
-  onChange: (key: K) => void;
-  label: string;
-}) {
+/** The one soft accent wash a screen gets. Content sits on top with `padding`. */
+export function HeroFill({ children, padding = 24 }: PropsWithChildren<{ padding?: number }>) {
   return (
-    <View accessibilityRole="tablist" accessibilityLabel={label} style={styles.segmented}>
-      {options.map((option) => {
-        const on = option.key === value;
-        return (
-          <Pressable
-            key={option.key}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: on }}
-            accessibilityLabel={option.spoken ?? option.label}
-            onPress={() => onChange(option.key)}
-            style={[styles.segment, on && { backgroundColor: colors.accentTint }]}
-          >
-            <AppText
-              numberOfLines={1}
-              style={{ fontFamily: on ? fonts.bold : fonts.medium, fontSize: 14, color: on ? colors.ink : colors.muted }}
-            >
-              {option.label}
-            </AppText>
-            <View style={[styles.segmentDot, { backgroundColor: option.dot ? colors.accent : 'transparent' }]} />
-          </Pressable>
-        );
-      })}
+    <View style={{ borderRadius: radius.hero, overflow: 'hidden', padding }}>
+      <LinearGradient pointerEvents="none" colors={[colors.accentTint, colors.card]} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
+      {children}
     </View>
   );
 }
 
-/** One subject row: name, mark and a thin bar in the school accent. */
+export function HeroSurface({ children, padding }: PropsWithChildren<{ padding?: number }>) {
+  return (
+    <View style={heroShell}>
+      <HeroFill padding={padding}>{children}</HeroFill>
+    </View>
+  );
+}
+
+/** One subject row: name, mark and a thin bar in the school accent that fills in turn. */
 export function LearnStatBar({
   label,
   valueLabel,
   ratio,
   spoken,
   last,
+  index = 0,
 }: {
   label: string;
   valueLabel: string;
@@ -98,53 +80,92 @@ export function LearnStatBar({
   ratio: number | null;
   spoken: string;
   last?: boolean;
+  /** Position in the list; later rows start filling a little later. */
+  index?: number;
 }) {
   return (
     <View accessible accessibilityLabel={spoken} style={[styles.statBar, !last && styles.statBarDivider]}>
       <View style={styles.statBarTop}>
-        <AppText style={{ flex: 1, fontFamily: fonts.semibold, fontSize: 16 }}>{label}</AppText>
-        <AppText style={{ fontFamily: fonts.semibold, fontSize: 16 }}>{valueLabel}</AppText>
+        <AppText numberOfLines={1} ellipsizeMode="tail" style={{ flex: 1, fontFamily: fonts.semibold, fontSize: 16 }}>
+          {label}
+        </AppText>
+        <AppText tabular style={{ fontFamily: fonts.semibold, fontSize: 16 }}>
+          {valueLabel}
+        </AppText>
       </View>
-      {ratio !== null ? (
-        <View style={styles.track}>
-          <View style={[styles.fill, { width: `${Math.round(ratio * 100)}%` }]} />
-        </View>
-      ) : null}
+      {ratio !== null ? <AnimatedBar ratio={ratio} delay={260 + staggerDelay(index, 70)} style={{ marginTop: 10 }} /> : null}
     </View>
   );
 }
 
-/** Small tappable number tile ("95% Attendance"). */
-export function LearnStatTile({ value, label, href }: { value: string; label: string; href: Href }) {
+const tileStyle = StyleSheet.flatten<ViewStyle>([
+  { flex: 1, minHeight: 64, backgroundColor: colors.card, borderRadius: 20, padding: 16, gap: 12 },
+  shadow.card,
+]);
+
+/** Small tappable number tile ("95% Attendance"). Press-scales and ticks like every other control. */
+export function LearnStatTile({ value, label, href, icon }: { value: string; label: string; href: Href; icon?: React.ComponentProps<typeof Feather>['name'] }) {
   return (
     <Link href={href} asChild>
-      <Pressable accessibilityRole="button" accessibilityLabel={`${label}: ${value}`} style={StyleSheet.flatten([styles.tile, shadow.card])}>
-        <AppText style={{ fontFamily: fonts.semibold, fontSize: 20, letterSpacing: -0.2 }}>{value}</AppText>
-        <AppText variant="caption" style={{ marginTop: 2 }}>
-          {label}
-        </AppText>
-      </Pressable>
+      <PressableScale accessibilityRole="button" accessibilityLabel={`${label}: ${value}`} style={tileStyle}>
+        {icon ? <IconBadge name={icon} size={36} /> : null}
+        <View>
+          <AppText tabular numberOfLines={1} ellipsizeMode="tail" maxFontSizeMultiplier={1.3} style={{ fontFamily: fonts.semibold, fontSize: 20, letterSpacing: -0.2 }}>
+            {value}
+          </AppText>
+          <AppText variant="caption" numberOfLines={1} ellipsizeMode="tail" style={{ marginTop: 2 }}>
+            {label}
+          </AppText>
+        </View>
+      </PressableScale>
     </Link>
+  );
+}
+
+/** "Happening now" marker: a solid dot with a halo that breathes. The halo is still under reduced motion. */
+export function PulseDot({ color = colors.accent, size = 8 }: { color?: string; size?: number }) {
+  const reduced = useReducedMotion();
+  const pulse = useSharedValue(0);
+
+  useEffect(() => {
+    if (reduced) return undefined;
+    pulse.set(withRepeat(withTiming(1, { duration: 1500, easing: Easing.out(Easing.quad) }), -1, false));
+    return () => cancelAnimation(pulse);
+  }, [pulse, reduced]);
+
+  const halo = useAnimatedStyle(() => ({ opacity: 0.5 * (1 - pulse.value), transform: [{ scale: 1 + 1.4 * pulse.value }] }));
+  const box = size * 3;
+  const disc = { width: size, height: size, borderRadius: size / 2, backgroundColor: color } as const;
+  return (
+    <View accessibilityElementsHidden importantForAccessibility="no" style={{ width: box, height: box, alignItems: 'center', justifyContent: 'center' }}>
+      {reduced ? null : <Animated.View style={[styles.halo, disc, halo]} />}
+      <View style={disc} />
+    </View>
+  );
+}
+
+/** Chevron that turns over when a row opens. */
+export function RotatingChevron({ open, size = 18 }: { open: boolean; size?: number }) {
+  const reduced = useReducedMotion();
+  const turn = useSharedValue(open ? 1 : 0);
+
+  useEffect(() => {
+    const target = open ? 1 : 0;
+    turn.set(reduced ? target : withTiming(target, { duration: 200, easing: Easing.out(Easing.cubic) }));
+  }, [open, reduced, turn]);
+
+  const style = useAnimatedStyle(() => ({ transform: [{ rotate: `${turn.value * 180}deg` }] }));
+  return (
+    <Animated.View style={style}>
+      <Feather name="chevron-down" size={size} color={colors.faint} />
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   sectionTitle: { marginHorizontal: 4, marginBottom: -8 },
-  segmented: {
-    flexDirection: 'row',
-    backgroundColor: colors.card,
-    borderRadius: 26,
-    borderWidth: 1,
-    borderColor: colors.border,
-    padding: 4,
-    gap: 2,
-  },
-  segment: { flex: 1, minHeight: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
-  segmentDot: { width: 5, height: 5, borderRadius: 3, marginTop: 2 },
   statBar: { paddingVertical: 14, paddingHorizontal: 18 },
   statBarDivider: { borderBottomWidth: 1, borderBottomColor: colors.divider },
   statBarTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  track: { marginTop: 10, height: 6, borderRadius: 3, backgroundColor: colors.divider, overflow: 'hidden' },
-  fill: { height: 6, borderRadius: 3, backgroundColor: colors.accent },
-  tile: { flex: 1, minHeight: 64, backgroundColor: colors.card, borderRadius: 20, paddingVertical: 14, paddingHorizontal: 16 },
+  halo: { position: 'absolute' },
 });

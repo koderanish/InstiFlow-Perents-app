@@ -1,38 +1,46 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Share, StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { ChildGate } from '@/components/child-gate';
 import { usePullRefresh } from '@/components/learn/hooks';
-import { LearnSectionTitle } from '@/components/learn/learn-parts';
-import { AppText, BackHeader, Card, Chip, Display, EmptyState, ErrorState, ListCard, Loading, PrimaryButton, Screen } from '@/components/ui';
+import { HeroSurface, LearnSectionTitle } from '@/components/learn/learn-parts';
+import { PercentHero } from '@/components/learn/percent-hero';
+import { AppText, BackHeader, Card, EmptyState, ErrorState, ListCard, Loading, PrimaryButton, Screen } from '@/components/ui';
 import { SCHOOL } from '@/config/school';
 import { useChildren, useResults } from '@/features/parent/hooks';
 import { friendlyError } from '@/lib/errors';
 import { firstName } from '@/lib/format';
-import { formatMarks, marksSummary, percentLabel, reportCardText, resultBadge, resultPercent } from '@/lib/results';
+import { formatMarks, marksSummary, reportCardText, resultBadge, resultPercent } from '@/lib/results';
+import { successHaptic } from '@/motion/haptics';
+import { CountUp } from '@/motion/count-up';
+import { enterFade, enterRise } from '@/motion/presets';
+import { Reveal } from '@/motion/reveal';
 import { colors, fonts } from '@/theme';
 import type { ExamResult, ParentChild, SubjectResult } from '@/types/parent';
 
 const marksOutOf = (marks: number | null, max: number | null): string =>
   marks === null ? '—' : max !== null ? `${formatMarks(marks)} / ${formatMarks(max)}` : formatMarks(marks);
 
-function SubjectRow({ subject }: { subject: SubjectResult }) {
+function SubjectRow({ subject, index }: { subject: SubjectResult; index: number }) {
   const spoken = `${subject.name}, ${marksOutOf(subject.marks, subject.maxMarks)}${subject.grade ? `, grade ${subject.grade}` : ''}`;
   return (
-    <View accessible accessibilityLabel={spoken} style={[styles.row, styles.rowDivider]}>
+    <Animated.View entering={enterRise(index)} accessible accessibilityLabel={spoken} style={[styles.row, styles.rowDivider]}>
       <View style={{ flex: 1 }}>
-        <AppText style={{ fontFamily: fonts.semibold, fontSize: 16 }}>{subject.name}</AppText>
+        <AppText numberOfLines={1} ellipsizeMode="tail" style={{ fontFamily: fonts.semibold, fontSize: 16 }}>
+          {subject.name}
+        </AppText>
         {subject.remarks ? (
           <AppText variant="caption" style={{ fontSize: 13, marginTop: 2 }}>
             {subject.remarks}
           </AppText>
         ) : null}
       </View>
-      <AppText variant="caption" style={styles.marksCol}>
+      <AppText variant="caption" tabular style={styles.marksCol}>
         {marksOutOf(subject.marks, subject.maxMarks)}
       </AppText>
       <AppText style={styles.gradeCol}>{subject.grade ?? '—'}</AppText>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -43,78 +51,105 @@ function ReportCard({ child, result }: { child: ParentChild; result: ExamResult 
 
   const share = async () => {
     try {
-      await Share.share({ message: reportCardText({ schoolName: SCHOOL.name, studentName: child.name, className: child.className || null, result }) });
+      const outcome = await Share.share({
+        message: reportCardText({ schoolName: SCHOOL.name, studentName: child.name, className: child.className || null, result }),
+      });
+      if (outcome.action === Share.sharedAction) successHaptic();
     } catch {
       // The share sheet failing to open is not something a parent can fix; they can simply try again.
     }
   };
 
+  const rows = result.subjects.length;
+
   return (
     <>
-      <Card>
-        <View style={styles.schoolRow}>
-          <View style={styles.logo}>
-            <AppText style={{ fontFamily: fonts.bold, fontSize: 14, color: colors.accentInk }}>{SCHOOL.shortName}</AppText>
+      <Reveal index={0}>
+        <Card>
+          <View style={styles.schoolRow}>
+            <View style={styles.logo}>
+              <AppText numberOfLines={1} style={{ fontFamily: fonts.bold, fontSize: 14, color: colors.accentInk }}>
+                {SCHOOL.shortName}
+              </AppText>
+            </View>
+            <View style={{ flex: 1 }}>
+              <AppText variant="heading" numberOfLines={2} ellipsizeMode="tail">
+                {SCHOOL.name}
+              </AppText>
+              <AppText variant="caption" numberOfLines={1} ellipsizeMode="tail" style={{ fontSize: 13 }}>
+                {result.name}
+              </AppText>
+            </View>
           </View>
-          <View style={{ flex: 1 }}>
-            <AppText variant="heading">{SCHOOL.name}</AppText>
-            <AppText variant="caption" style={{ fontSize: 13 }}>
-              {result.name}
+          <View style={styles.studentRow}>
+            <AppText numberOfLines={1} ellipsizeMode="tail" style={{ fontFamily: fonts.semibold, fontSize: 18 }}>
+              {child.name}
+            </AppText>
+            <AppText variant="caption" style={{ marginTop: 2 }}>
+              {[child.className, child.admissionNo ? `Admission no. ${child.admissionNo}` : null].filter(Boolean).join(', ')}
             </AppText>
           </View>
-        </View>
-        <View style={styles.studentRow}>
-          <AppText style={{ fontFamily: fonts.semibold, fontSize: 18 }}>{child.name}</AppText>
-          <AppText variant="caption" style={{ marginTop: 2 }}>
-            {[child.className, child.admissionNo ? `Admission no. ${child.admissionNo}` : null].filter(Boolean).join(', ')}
-          </AppText>
-        </View>
-      </Card>
+        </Card>
+      </Reveal>
 
-      <Card hero style={{ padding: 22 }}>
-        <View style={styles.heroTop}>
-          <Display style={{ fontSize: 56, lineHeight: 62, letterSpacing: -1.1 }}>{percentLabel(percent)}</Display>
-          {badge ? <Chip label={badge.label} tone={badge.tone} /> : null}
-        </View>
-        <AppText variant="caption" style={{ fontSize: 15, marginTop: 12 }}>
-          {marksSummary(result)}
-        </AppText>
-      </Card>
+      <Reveal index={1}>
+        <HeroSurface padding={22}>
+          <PercentHero percent={percent} badge={badge} summary={marksSummary(result)} size={104} numeralSize={30} />
+        </HeroSurface>
+      </Reveal>
 
-      {result.subjects.length > 0 ? (
-        <ListCard>
-          <View style={[styles.row, styles.rowDivider]}>
-            <AppText variant="caption" style={{ flex: 1, fontSize: 13 }}>
-              Subject
-            </AppText>
-            <AppText variant="caption" style={[styles.marksCol, { fontSize: 13 }]}>
-              Marks
-            </AppText>
-            <AppText variant="caption" style={[styles.gradeCol, { fontSize: 13, fontFamily: fonts.body, color: colors.muted }]}>
-              Grade
-            </AppText>
-          </View>
-          {result.subjects.map((s, i) => (
-            <SubjectRow key={`${s.name}-${i}`} subject={s} />
-          ))}
-          <View accessible accessibilityLabel={`Total, ${marksOutOf(result.totalMarks, result.maxTotal)}${result.grade ? `, grade ${result.grade}` : ''}`} style={[styles.row, styles.totalRow]}>
-            <AppText style={{ flex: 1, fontFamily: fonts.bold, fontSize: 16 }}>Total</AppText>
-            <AppText style={[styles.marksCol, { fontFamily: fonts.semibold, color: colors.ink }]}>{marksOutOf(result.totalMarks, result.maxTotal)}</AppText>
-            <AppText style={styles.gradeCol}>{result.grade ?? '—'}</AppText>
-          </View>
-        </ListCard>
+      {rows > 0 ? (
+        <Animated.View entering={enterFade(2)}>
+          <ListCard>
+            <View style={[styles.row, styles.rowDivider]}>
+              <AppText variant="caption" style={{ flex: 1, fontSize: 13 }}>
+                Subject
+              </AppText>
+              <AppText variant="caption" style={[styles.marksCol, { fontSize: 13 }]}>
+                Marks
+              </AppText>
+              <AppText variant="caption" style={[styles.gradeCol, { fontSize: 13, fontFamily: fonts.body, color: colors.muted }]}>
+                Grade
+              </AppText>
+            </View>
+            {result.subjects.map((s, i) => (
+              <SubjectRow key={`${s.name}-${i}`} subject={s} index={i + 2} />
+            ))}
+            <Animated.View
+              entering={enterRise(rows + 2)}
+              accessible
+              accessibilityLabel={`Total, ${marksOutOf(result.totalMarks, result.maxTotal)}${result.grade ? `, grade ${result.grade}` : ''}`}
+              style={[styles.row, styles.totalRow]}
+            >
+              <AppText style={{ flex: 1, fontFamily: fonts.bold, fontSize: 16 }}>Total</AppText>
+              <AppText tabular style={[styles.marksCol, { fontFamily: fonts.semibold, color: colors.ink }]}>
+                {result.totalMarks === null ? (
+                  '—'
+                ) : (
+                  <>
+                    <CountUp value={result.totalMarks} delay={400} format={(n) => formatMarks(n)} />
+                    {result.maxTotal !== null ? ` / ${formatMarks(result.maxTotal)}` : ''}
+                  </>
+                )}
+              </AppText>
+              <AppText style={styles.gradeCol}>{result.grade ?? '—'}</AppText>
+            </Animated.View>
+          </ListCard>
+        </Animated.View>
       ) : null}
 
       {remarks ? (
-        <View style={{ gap: 20 }}>
+        <Reveal index={3} style={{ gap: 20 }}>
           <LearnSectionTitle title={`Teacher's remarks`} />
           <Card style={{ padding: 18 }}>
             <AppText style={{ fontFamily: fonts.body, fontSize: 15, lineHeight: 22, color: '#3B352F' }}>{remarks}</AppText>
           </Card>
-        </View>
+        </Reveal>
       ) : null}
 
-      <PrimaryButton label="Share report card" onPress={() => void share()} />
+      <Reveal index={4}>
+        <PrimaryButton label="Share report card" onPress={() => void share()} />
+      </Reveal>
     </>
   );
 }
@@ -150,7 +185,6 @@ const styles = StyleSheet.create({
   schoolRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
   logo: { width: 48, height: 48, borderRadius: 16, backgroundColor: colors.accentTint, alignItems: 'center', justifyContent: 'center' },
   studentRow: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.divider },
-  heroTop: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 18, paddingVertical: 14 },
   rowDivider: { borderBottomWidth: 1, borderBottomColor: colors.divider },
   totalRow: { backgroundColor: colors.accentTint, borderBottomLeftRadius: 24, borderBottomRightRadius: 24 },
