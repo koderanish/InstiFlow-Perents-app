@@ -7,7 +7,7 @@ import { SelectChip } from '@/components/account/select-chip';
 import { ChildChips } from '@/components/child-chips';
 import { CollapsingScreen } from '@/components/collapsing-screen';
 import { ListCard } from '@/components/ui';
-import { SCHOOL } from '@/config/school';
+import { useSchool } from '@/branding';
 import { useNotices } from '@/features/parent/hooks';
 import { useT } from '@/i18n';
 import { ALL_CATEGORIES, filterNotices, noticeCategories } from '@/lib/notices';
@@ -60,12 +60,13 @@ function NoticeList({ notices }: { notices: Notice[] }) {
 
 export default function InboxScreen() {
   const t = useT();
+  const school = useSchool();
   const page = useChildPage();
   const notices = useNotices(page.child?.id);
   return (
     <CollapsingScreen
       title={t('tab.inbox')}
-      subtitle={t('account.inbox.from', { school: SCHOOL.name })}
+      subtitle={t('account.inbox.from', { school: school.name })}
       refreshing={notices.isRefetching}
       onRefresh={() => {
         void page.refetch();

@@ -16,6 +16,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { BrandSplash } from '@/components/account/brand';
+import { useBrandingStore } from '@/branding';
 import { AppProviders, queryClient } from '@/providers/query-provider';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePrefsStore } from '@/stores/prefs-store';
@@ -53,6 +54,9 @@ function RootShell() {
   const prefsReady = usePrefsStore((s) => s.hydrated);
   const tipsSeen = usePrefsStore((s) => s.tipsSeen);
   const restorePrefs = usePrefsStore((s) => s.restore);
+  const brandingReady = useBrandingStore((s) => s.hydrated);
+  const restoreBranding = useBrandingStore((s) => s.restore);
+  const refreshBranding = useBrandingStore((s) => s.refresh);
   const segments = useSegments();
   const router = useRouter();
   const [splashGone, setSplashGone] = useState(false);
@@ -70,7 +74,13 @@ function RootShell() {
     void restorePrefs();
   }, [restorePrefs]);
 
-  const ready = fontsLoaded && prefsReady && (status === 'authenticated' || status === 'unauthenticated');
+  // The saved logo and colour load first so the very first frame is already in the school's colours;
+  // the fresh copy is fetched in the background and applied when it arrives.
+  useEffect(() => {
+    void restoreBranding().then(() => refreshBranding());
+  }, [restoreBranding, refreshBranding]);
+
+  const ready = fontsLoaded && prefsReady && brandingReady && (status === 'authenticated' || status === 'unauthenticated');
 
   // The native splash only covers the first moments. Once fonts are in, our own
   // branded splash takes over until the saved sign-in has been checked.

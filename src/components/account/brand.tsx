@@ -1,20 +1,25 @@
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, FadeIn, Keyframe, ReduceMotion } from 'react-native-reanimated';
 
-import { SCHOOL } from '@/config/school';
+import { useSchool } from '@/branding';
 import { useT } from '@/i18n';
 import { fonts, useStyles, useTheme, type Theme } from '@/theme';
 
 /** The school's letters on a soft accent tile. Uses the school accent, never a fixed colour. */
 export function SchoolMark({ size = 64 }: { size?: number }) {
   const { colors, shadow } = useTheme();
+  const school = useSchool();
   return (
     <View
       accessibilityElementsHidden
       importantForAccessibility="no"
-      style={[{ width: size, height: size, borderRadius: size * 0.31, backgroundColor: colors.accentTint, alignItems: 'center', justifyContent: 'center' }, size > 80 && shadow.card]}
+      style={[{ width: size, height: size, borderRadius: size * 0.31, backgroundColor: school.logoUrl ? '#FFFFFF' : colors.accentTint, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }, size > 80 && shadow.card]}
     >
-      <Text style={{ fontFamily: fonts.bold, fontSize: size * 0.36, color: colors.accentInk }}>{SCHOOL.shortName}</Text>
+      {school.logoUrl ? (
+        <Image source={{ uri: school.logoUrl }} resizeMode="contain" style={{ width: size * 0.78, height: size * 0.78 }} />
+      ) : (
+        <Text style={{ fontFamily: fonts.bold, fontSize: size * 0.36, color: colors.accentInk }}>{school.shortName}</Text>
+      )}
     </View>
   );
 }
@@ -47,14 +52,15 @@ const fadeInAfter = (delay: number) => FadeIn.delay(delay).duration(360).reduceM
 export function BrandSplash() {
   const styles = useStyles(createStyles);
   const t = useT();
+  const school = useSchool();
   return (
-    <View accessible accessibilityLabel={t('account.splash.loading', { name: SCHOOL.name })} style={styles.splash}>
+    <View accessible accessibilityLabel={t('account.splash.loading', { name: school.name })} style={styles.splash}>
       <View style={styles.center}>
         <Animated.View entering={logoIn}>
           <SchoolMark size={112} />
         </Animated.View>
         <Animated.View entering={fadeInAfter(180)}>
-          <Text style={styles.name}>{SCHOOL.name}</Text>
+          <Text style={styles.name}>{school.name}</Text>
         </Animated.View>
       </View>
       <Animated.View entering={fadeInAfter(320)} style={styles.bottom}>

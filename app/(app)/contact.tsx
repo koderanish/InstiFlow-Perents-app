@@ -7,7 +7,7 @@ import { QueryBoundary } from '@/components/account/page-state';
 import { InsetList, Tray, WashCard } from '@/components/account/surfaces';
 import { IconBadge } from '@/components/icon-badge';
 import { AppText, BackHeader, Screen } from '@/components/ui';
-import { SCHOOL } from '@/config/school';
+import { useSchool } from '@/branding';
 import { useSchoolContact } from '@/features/parent/hooks';
 import { useT } from '@/i18n';
 import { contactActions, hasContact, mapsUrl, present, type ContactAction } from '@/lib/contact';
@@ -84,11 +84,12 @@ function ContactBody({ school }: { school: SchoolContact }) {
 
 export default function ContactScreen() {
   const t = useT();
+  const school = useSchool();
   const goBack = useGoBack();
   const contact = useSchoolContact();
   return (
     <Screen
-      header={<BackHeader title={t('account.contact.title')} subtitle={contact.data?.name ?? SCHOOL.name} onBack={goBack} />}
+      header={<BackHeader title={t('account.contact.title')} subtitle={contact.data?.name ?? school.name} onBack={goBack} />}
       refreshing={contact.isRefetching}
       onRefresh={() => void contact.refetch()}
     >

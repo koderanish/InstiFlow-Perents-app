@@ -1,10 +1,11 @@
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Image, StyleSheet, Text, View } from 'react-native';
 import Animated, { cancelAnimation, Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
 
-import { SCHOOL } from '@/config/school';
+import { useSchool } from '@/branding';
+import { luminance } from '@/branding/rules';
 import { useLocale, useT } from '@/i18n';
 import { LANGUAGES, type Language } from '@/lib/prefs';
 import { tapHaptic } from '@/motion/haptics';
@@ -62,18 +63,19 @@ export function LoginHero({ topInset }: { topInset: number }) {
   const styles = useStyles(createStyles);
   const { colors } = useTheme();
   const t = useT();
+  const school = useSchool();
   return (
-    <LinearGradient colors={[colors.accent, mix(colors.accent, '#000000', 0.38)]} start={{ x: 0.1, y: 0 }} end={{ x: 0.9, y: 1 }} style={[styles.hero, { paddingTop: topInset + 12 }]}>
+    <LinearGradient colors={[luminance(colors.accent) > 0.45 ? mix(colors.accent, '#000000', 0.3) : colors.accent, mix(colors.accent, '#000000', 0.45)]} start={{ x: 0.1, y: 0 }} end={{ x: 0.9, y: 1 }} style={[styles.hero, { paddingTop: topInset + 12 }]}>
       <Orb size={220} top={-60} right={-70} delay={0} opacity={0.12} />
       <Orb size={140} top={120} left={-60} delay={900} opacity={0.08} />
       <Orb size={64} top={70} right={90} delay={400} opacity={0.14} />
       <View style={styles.topRow}>
         <View style={styles.brand}>
           <View style={styles.logo}>
-            <Text style={styles.logoText}>{SCHOOL.shortName}</Text>
+            {school.logoUrl ? <Image source={{ uri: school.logoUrl }} resizeMode="contain" style={styles.logoImage} /> : <Text style={styles.logoText}>{school.shortName}</Text>}
           </View>
           <Text numberOfLines={1} style={styles.school}>
-            {SCHOOL.name}
+            {school.name}
           </Text>
         </View>
         <LanguagePill />
@@ -99,7 +101,8 @@ const createStyles = () =>
     hero: { paddingHorizontal: 24, paddingBottom: 56, overflow: 'hidden' },
     topRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
     brand: { flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 1 },
-    logo: { width: 40, height: 40, borderRadius: 13, backgroundColor: 'rgba(255,255,255,0.2)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.35)', alignItems: 'center', justifyContent: 'center' },
+    logo: { width: 40, height: 40, borderRadius: 13, backgroundColor: 'rgba(255,255,255,0.2)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.35)', overflow: 'hidden', alignItems: 'center', justifyContent: 'center' },
+    logoImage: { width: 40, height: 40 },
     logoText: { fontFamily: fonts.bold, fontSize: 15, color: '#FFFFFF' },
     school: { fontFamily: fonts.semibold, fontSize: 15, color: '#FFFFFF', flexShrink: 1 },
     langPill: { flexDirection: 'row', alignItems: 'center', gap: 6, height: 34, paddingHorizontal: 12, borderRadius: 17, backgroundColor: 'rgba(255,255,255,0.18)', borderWidth: 1, borderColor: 'rgba(255,255,255,0.3)' },

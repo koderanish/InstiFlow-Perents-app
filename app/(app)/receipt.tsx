@@ -7,7 +7,7 @@ import { CountUpText, PopIn } from '@/components/account/motion-bits';
 import { QueryBoundary, useChildPage } from '@/components/account/page-state';
 import { WashCard } from '@/components/account/surfaces';
 import { AppText, BackHeader, Chip, EmptyState, ListCard, ListRow, Screen } from '@/components/ui';
-import { SCHOOL } from '@/config/school';
+import { useSchool } from '@/branding';
 import { useInvoice } from '@/features/parent/hooks';
 import { useLocale, useT, type Locale, type TFunction } from '@/i18n';
 import { toISODate } from '@/lib/dates';
@@ -38,6 +38,7 @@ function paidLine(inv: InvoiceDetail, t: TFunction, locale: Locale): string {
 
 function ReceiptBody({ inv, child }: { inv: InvoiceDetail; child: ParentChild }) {
   const t = useT();
+  const school = useSchool();
   const locale = useLocale();
   const { colors } = useTheme();
   const paid = inv.balance <= 0;
@@ -55,7 +56,7 @@ function ReceiptBody({ inv, child }: { inv: InvoiceDetail; child: ParentChild })
 
   const share = async () => {
     try {
-      await Share.share({ message: receiptText(inv, SCHOOL.name, child.name, t, locale), title: t('account.receipt.shareTitle', { period: inv.period }) });
+      await Share.share({ message: receiptText(inv, school.name, child.name, t, locale), title: t('account.receipt.shareTitle', { period: inv.period }) });
     } catch {
       // The parent closed or could not open the share sheet; nothing to report.
     }

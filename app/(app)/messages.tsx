@@ -9,7 +9,7 @@ import { useChatThread } from '@/components/chat/hooks';
 import { ChatHeader, EmptyChat, StaleNote, ThreadSkeleton } from '@/components/chat/parts';
 import { useNow } from '@/components/learn/hooks';
 import { ErrorState } from '@/components/ui';
-import { SCHOOL } from '@/config/school';
+import { useSchool } from '@/branding';
 import { useT } from '@/i18n';
 import { friendlyError } from '@/lib/errors';
 import type { ChatRow } from '@/lib/messages';
@@ -21,6 +21,7 @@ const NEAR_BOTTOM_PX = 120;
 export default function MessagesScreen() {
   const styles = useStyles(createStyles);
   const t = useT();
+  const school = useSchool();
   const goBack = useGoBack();
   const now = useNow();
   const { query, rows, hasMessages, send, retry, discard, isFresh } = useChatThread();
@@ -57,7 +58,7 @@ export default function MessagesScreen() {
     [now, isFresh, retry, discard],
   );
 
-  const header = <ChatHeader title={t('chat.title')} subtitle={SCHOOL.name} onBack={goBack} />;
+  const header = <ChatHeader title={t('chat.title')} subtitle={school.name} onBack={goBack} />;
 
   if (query.isError && !query.data) {
     return (

@@ -10,7 +10,7 @@ import { PoweredBy } from '@/components/account/brand';
 import { InsetList, Tray, WashCard } from '@/components/account/surfaces';
 import { CollapsingScreen } from '@/components/collapsing-screen';
 import { AppText, ListCard, ListRow } from '@/components/ui';
-import { SCHOOL } from '@/config/school';
+import { useSchool } from '@/branding';
 import { useChildren } from '@/features/parent/hooks';
 import { detectLocale, LOCALE_NAMES, useT } from '@/i18n';
 import { initials } from '@/lib/format';
@@ -25,6 +25,7 @@ export default function ProfileScreen() {
   const styles = useStyles(createStyles);
   const { colors } = useTheme();
   const t = useT();
+  const school = useSchool();
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
@@ -134,7 +135,7 @@ export default function ProfileScreen() {
         <Section title={t('account.profile.about')}>
           <DetailCard
             items={[
-              { label: t('account.profile.school'), value: SCHOOL.name },
+              { label: t('account.profile.school'), value: school.name },
               { label: t('account.profile.version'), value: version },
             ]}
           />
