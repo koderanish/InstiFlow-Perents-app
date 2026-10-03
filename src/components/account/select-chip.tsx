@@ -4,7 +4,7 @@ import Animated, { interpolateColor, useAnimatedStyle, useReducedMotion, useShar
 
 import { AppText } from '@/components/ui';
 import { PressableScale } from '@/motion/pressable-scale';
-import { colors, fonts } from '@/theme';
+import { fonts, useTheme } from '@/theme';
 
 /** A choice chip whose fill and outline fade between selected and not. At least 44pt tall. */
 export function SelectChip({
@@ -18,8 +18,10 @@ export function SelectChip({
   onPress: () => void;
   accessibilityLabel?: string;
 }) {
+  const { colors } = useTheme();
   const reduced = useReducedMotion();
   const t = useSharedValue(selected ? 1 : 0);
+  const { card, border, accentTint } = colors;
 
   useEffect(() => {
     const target = selected ? 1 : 0;
@@ -27,8 +29,8 @@ export function SelectChip({
   }, [selected, reduced, t]);
 
   const fill = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(t.get(), [0, 1], [colors.card, colors.accentTint]),
-    borderColor: interpolateColor(t.get(), [0, 1], [colors.border, colors.accentTint]),
+    backgroundColor: interpolateColor(t.get(), [0, 1], [card, accentTint]),
+    borderColor: interpolateColor(t.get(), [0, 1], [border, accentTint]),
   }));
 
   return (

@@ -1,7 +1,8 @@
-/** Calendar-day helpers on "YYYY-MM-DD" strings. Pure and timezone-safe (no Date parsing of day strings). */
+import { monthName, monthShort, weekdayShort } from '@/i18n/names';
+import { defaultT, type TFunction } from '@/i18n/translate';
+import type { Locale } from '@/i18n/types';
 
-const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+/** Calendar-day helpers on "YYYY-MM-DD" strings. Pure and timezone-safe (no Date parsing of day strings). */
 
 interface Parts {
   y: number;
@@ -24,8 +25,6 @@ const stamp = (p: Parts): number => Date.UTC(p.y, p.m - 1, p.d);
 
 const pad = (n: number): string => String(n).padStart(2, '0');
 
-const monthName = (m: number): string => MONTHS[m - 1] ?? '';
-
 /** Local calendar day of a Date as "YYYY-MM-DD". */
 export const toISODate = (date: Date): string => `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
 
@@ -46,20 +45,20 @@ export const daysBetween = (from: string, to: string): number | null => {
   return Math.round((stamp(b) - stamp(a)) / 86_400_000);
 };
 
-const weekdayOf = (p: Parts): string => WEEKDAYS[new Date(stamp(p)).getUTCDay()] ?? '';
+const weekdayOf = (p: Parts, locale: Locale): string => weekdayShort(locale, new Date(stamp(p)).getUTCDay());
 
-/** "2026-10-05" -> "Mon, 5 Oct". */
-export const shortDate = (day: string | null | undefined): string | null => {
+/** "2026-10-05" -> "Mon, 5 Oct" (Hindi uses its own day and month names). */
+export const shortDate = (day: string | null | undefined, locale: Locale = 'en'): string | null => {
   const p = parse(day);
   if (!p) return null;
-  return `${weekdayOf(p)}, ${p.d} ${monthName(p.m).slice(0, 3)}`;
+  return `${weekdayOf(p, locale)}, ${p.d} ${monthShort(locale, p.m)}`;
 };
 
 /** "2014-03-14" -> "14 March 2014". */
-export const fullDate = (day: string | null | undefined): string | null => {
+export const fullDate = (day: string | null | undefined, locale: Locale = 'en'): string | null => {
   const p = parse(day);
   if (!p) return null;
-  return `${p.d} ${monthName(p.m)} ${p.y}`;
+  return `${p.d} ${monthName(locale, p.m)} ${p.y}`;
 };
 
 export interface StripDay {
@@ -70,26 +69,42 @@ export interface StripDay {
 }
 
 /** `count` consecutive days starting at `start`, for the leave date chooser. */
-export const dayStrip = (start: string, count: number): StripDay[] => {
+export const dayStrip = (start: string, count: number, locale: Locale = 'en'): StripDay[] => {
   const out: StripDay[] = [];
   for (let i = 0; i < count; i += 1) {
     const iso = addDays(start, i);
     const p = parse(iso);
     if (!iso || !p) break;
-    out.push({ iso, weekday: weekdayOf(p), day: p.d, month: monthName(p.m).slice(0, 3) });
+    out.push({ iso, weekday: weekdayOf(p, locale), day: p.d, month: monthShort(locale, p.m) });
   }
   return out;
 };
 
-/** "Today", "Yesterday" or "28 September" for a timestamp, in the phone's timezone. */
-export const postedLabel = (iso: string, now: Date = new Date()): string => {
+export interface PostedInfo {
+  kind: 'today' | 'yesterday' | 'date';
+  day: number;
+  /** 1 to 12. */
+  month: number;
+}
+
+/** Where a timestamp falls relative to `now`, in the phone's timezone. Null when it cannot be read. */
+export const postedInfo = (iso: string, now: Date = new Date()): PostedInfo | null => {
   const posted = new Date(iso);
-  if (Number.isNaN(posted.getTime())) return '';
+  if (Number.isNaN(posted.getTime())) return null;
   const day = toISODate(posted);
   const today = toISODate(now);
-  if (day === today) return 'Today';
-  if (day === addDays(today, -1)) return 'Yesterday';
   const p = parse(day);
-  if (!p) return '';
-  return `${p.d} ${monthName(p.m)}`;
+  if (!p) return null;
+  if (day === today) return { kind: 'today', day: p.d, month: p.m };
+  if (day === addDays(today, -1)) return { kind: 'yesterday', day: p.d, month: p.m };
+  return { kind: 'date', day: p.d, month: p.m };
+};
+
+/** "Today", "Yesterday" or "28 September" for a timestamp, in the phone's timezone. */
+export const postedLabel = (iso: string, now: Date = new Date(), t: TFunction = defaultT, locale: Locale = 'en'): string => {
+  const info = postedInfo(iso, now);
+  if (!info) return '';
+  if (info.kind === 'today') return t('common.today');
+  if (info.kind === 'yesterday') return t('common.yesterday');
+  return `${info.day} ${monthName(locale, info.month)}`;
 };

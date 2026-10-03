@@ -3,7 +3,7 @@ import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
 
 import { AppText } from '@/components/ui';
-import { colors, fonts, shadow } from '@/theme';
+import { fonts, useStyles, useTheme, type Theme } from '@/theme';
 
 import { tapHaptic } from './haptics';
 import { PressableScale } from './pressable-scale';
@@ -37,6 +37,8 @@ export function Segmented<K extends string>({
   onChange: (key: K) => void;
   label: string;
 }) {
+  const { colors } = useTheme();
+  const styles = useStyles(createStyles);
   const reduced = useReducedMotion();
   const [width, setWidth] = useState(0);
   const count = Math.max(1, options.length);
@@ -95,10 +97,12 @@ export function Segmented<K extends string>({
   );
 }
 
-const styles = StyleSheet.create({
-  // Outer radius = pill radius + padding, so the two curves stay concentric.
-  track: { flexDirection: 'row', backgroundColor: colors.border, borderRadius: HEIGHT / 2 + PAD, padding: PAD },
-  pill: { position: 'absolute', left: PAD, top: PAD, height: HEIGHT, borderRadius: HEIGHT / 2, backgroundColor: colors.card, ...shadow.card },
-  segment: { flex: 1, minHeight: HEIGHT, borderRadius: HEIGHT / 2, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
-  dot: { width: 5, height: 5, borderRadius: 3, marginTop: 2 },
-});
+/** In dark mode the pill is the lighter step so it still reads as raised. */
+const createStyles = ({ colors, shadow, isDark }: Theme) =>
+  StyleSheet.create({
+    // Outer radius = pill radius + padding, so the two curves stay concentric.
+    track: { flexDirection: 'row', backgroundColor: isDark ? colors.card : colors.border, borderRadius: HEIGHT / 2 + PAD, padding: PAD },
+    pill: { position: 'absolute', left: PAD, top: PAD, height: HEIGHT, borderRadius: HEIGHT / 2, backgroundColor: isDark ? colors.border : colors.card, ...shadow.card },
+    segment: { flex: 1, minHeight: HEIGHT, borderRadius: HEIGHT / 2, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 4 },
+    dot: { width: 5, height: 5, borderRadius: 3, marginTop: 2 },
+  });

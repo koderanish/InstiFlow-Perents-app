@@ -1,13 +1,15 @@
+import { monthName, weekdayShort } from '@/i18n/names';
+import type { Locale } from '@/i18n/types';
+import type { Palette } from '@/theme/palette';
+
 /** Month calendar helpers for the attendance screen. Pure and unit tested. */
 
 export type CalendarCell = { day: number; status: string | null } | null;
 
-const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
 /** "2026-10" -> "October 2026". */
-export const monthLabel = (month: string): string => {
+export const monthLabel = (month: string, locale: Locale = 'en'): string => {
   const [y, m] = month.split('-');
-  const name = MONTHS[Number(m) - 1];
+  const name = monthName(locale, Number(m));
   return name && y ? `${name} ${y}` : month;
 };
 
@@ -52,4 +54,30 @@ export const statusColor = (status: string): string => {
     default:
       return 'transparent';
   }
+};
+
+/** Column headers for the Monday-first grid: one letter in English, the short name in Hindi (letters there are not single characters). */
+export const weekdayInitials = (locale: Locale): string[] =>
+  [1, 2, 3, 4, 5, 6, 0].map((day) => (locale === 'en' ? weekdayShort(locale, day).charAt(0) : weekdayShort(locale, day)));
+
+/** Status colour from the active palette, so dots and tints stay readable in dark mode. */
+export const statusColorFor = (status: string | null, colors: Palette): string => {
+  switch (status) {
+    case 'present':
+      return colors.goodDot;
+    case 'late':
+      return colors.warnFg;
+    case 'absent':
+      return colors.badFg;
+    case 'leave':
+      return colors.faint;
+    default:
+      return 'transparent';
+  }
+};
+
+/** Soft day-cell background: the themed status colour at about 15% opacity. */
+export const statusTintFor = (status: string | null, colors: Palette): string => {
+  const solid = statusColorFor(status, colors);
+  return solid === 'transparent' ? solid : `${solid}26`;
 };

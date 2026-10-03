@@ -3,9 +3,9 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { Easing, useAnimatedProps, useReducedMotion, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import Svg, { Circle, Path } from 'react-native-svg';
 
-import { colors } from '@/theme';
+import { useTheme } from '@/theme';
 
-/** Start the ring at 12 o'clock. */
+/** Start the ring at 12 o'clock. A View transform, because SVG rotation/origin props are invalid DOM attributes on web. */
 const ringRotation = { transform: [{ rotate: '-90deg' }] } as const;
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
@@ -20,7 +20,10 @@ const easeOut = Easing.out(Easing.cubic);
  * A success mark that draws itself: the ring first, then the tick. Plays once when it mounts.
  * Pair it with `successHaptic()` at the moment the action succeeds.
  */
-export function DrawnCheck({ size = 72, color = colors.goodFg, background = colors.goodBg }: { size?: number; color?: string; background?: string }) {
+export function DrawnCheck({ size = 72, color, background }: { size?: number; color?: string; background?: string }) {
+  const { colors } = useTheme();
+  const stroke = color ?? colors.goodFg;
+  const fill = background ?? colors.goodBg;
   const reduced = useReducedMotion();
   const ring = useSharedValue(reduced ? 1 : 0);
   const tick = useSharedValue(reduced ? 1 : 0);
@@ -36,14 +39,13 @@ export function DrawnCheck({ size = 72, color = colors.goodFg, background = colo
 
   return (
     <View accessibilityElementsHidden importantForAccessibility="no" style={{ width: size, height: size }}>
-      {/* Ring and tick are separate SVGs so only the ring is rotated (a View transform, not SVG rotation/origin props, which are invalid DOM attributes on web). */}
       <Svg width={size} height={size} viewBox="0 0 72 72" style={ringRotation}>
-        <Circle cx={36} cy={36} r={RADIUS} fill={background} />
+        <Circle cx={36} cy={36} r={RADIUS} fill={fill} />
         <AnimatedCircle
           cx={36}
           cy={36}
           r={RADIUS}
-          stroke={color}
+          stroke={stroke}
           strokeWidth={3}
           strokeLinecap="round"
           fill="none"
@@ -54,7 +56,7 @@ export function DrawnCheck({ size = 72, color = colors.goodFg, background = colo
       <Svg width={size} height={size} viewBox="0 0 72 72" style={StyleSheet.absoluteFill}>
         <AnimatedPath
           d="M23 37 L32 46 L49 27"
-          stroke={color}
+          stroke={stroke}
           strokeWidth={4}
           strokeLinecap="round"
           strokeLinejoin="round"

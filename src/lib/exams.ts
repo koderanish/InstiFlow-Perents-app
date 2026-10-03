@@ -1,3 +1,6 @@
+import { defaultT, type TFunction } from '@/i18n/translate';
+import type { Locale } from '@/i18n/types';
+
 import { daysFromToday } from './learn-dates';
 import { clockFromTime, dayMonth } from './format';
 import type { ExamPaper, ExamSeries } from '@/types/parent';
@@ -59,17 +62,18 @@ export const buildExamPlan = (exams: ExamSeries[], now: Date): ExamPlan => {
 };
 
 /** "today", "tomorrow", "in 7 days". */
-export const daysToGo = (days: number): string => {
-  if (days <= 0) return 'today';
-  if (days === 1) return 'tomorrow';
-  return `in ${days} days`;
+export const daysToGo = (days: number, t: TFunction = defaultT): string => {
+  if (days <= 0) return t('learn.exams.today');
+  if (days === 1) return t('learn.exams.tomorrow');
+  return t('learn.exams.inDays', { count: days });
 };
 
-export const nextPaperHeadline = (next: NextPaper): string => `${next.paper.subject}, ${daysToGo(next.days)}`;
+export const nextPaperHeadline = (next: NextPaper, t: TFunction = defaultT): string =>
+  t('learn.exams.headline', { subject: next.paper.subject, when: daysToGo(next.days, t) });
 
 /** "9 October, 9:00 am". */
-export const paperWhen = (paper: ExamPaper): string => {
-  const day = dayMonth(paper.date) ?? paper.date;
+export const paperWhen = (paper: ExamPaper, locale: Locale = 'en'): string => {
+  const day = dayMonth(paper.date, locale) ?? paper.date;
   const time = clockFromTime(paper.startTime);
   return time ? `${day}, ${time}` : day;
 };
@@ -80,25 +84,25 @@ const minutesOf = (time: string | null): number | null => {
 };
 
 /** "9:00 am, 45 min" or just the start time; null when no time is set. */
-export const paperTimeLine = (paper: ExamPaper): string | null => {
+export const paperTimeLine = (paper: ExamPaper, t: TFunction = defaultT): string | null => {
   const start = clockFromTime(paper.startTime);
   if (!start) return null;
   const from = minutesOf(paper.startTime);
   const to = minutesOf(paper.endTime);
-  if (from !== null && to !== null && to > from) return `${start}, ${to - from} min`;
+  if (from !== null && to !== null && to > from) return t('learn.exams.timeWithDuration', { time: start, minutes: to - from });
   return start;
 };
 
 /** "Room 12, 50 marks"; null when there is nothing to add. */
-export const paperNoteLine = (paper: ExamPaper): string | null => {
-  const parts = [paper.venue, paper.maxMarks !== null ? `${paper.maxMarks} marks` : null].filter((p): p is string => !!p);
+export const paperNoteLine = (paper: ExamPaper, t: TFunction = defaultT): string | null => {
+  const parts = [paper.venue, paper.maxMarks !== null ? t('learn.exams.marks', { count: paper.maxMarks }) : null].filter((p): p is string => !!p);
   return parts.length > 0 ? parts.join(', ') : null;
 };
 
 /** "5 October to 15 October". */
-export const seriesRange = (series: ExamSeries): string | null => {
-  const from = dayMonth(series.startDate);
-  const to = dayMonth(series.endDate);
+export const seriesRange = (series: ExamSeries, t: TFunction = defaultT, locale: Locale = 'en'): string | null => {
+  const from = dayMonth(series.startDate, locale);
+  const to = dayMonth(series.endDate, locale);
   if (!from) return null;
-  return to && to !== from ? `${from} to ${to}` : from;
+  return to && to !== from ? t('learn.exams.range', { from, to }) : from;
 };

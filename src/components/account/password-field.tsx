@@ -3,8 +3,9 @@ import { StyleSheet, type TextInput, type TextInputProps } from 'react-native';
 
 import { IconSwap } from '@/components/account/icon-swap';
 import { TextField } from '@/components/account/text-field';
+import { useT } from '@/i18n';
 import { PressableScale } from '@/motion/pressable-scale';
-import { colors } from '@/theme';
+import { useTheme } from '@/theme';
 
 /** Password input with a show/hide button (52 by 56) whose icon cross-fades. */
 export function PasswordField({
@@ -26,6 +27,8 @@ export function PasswordField({
   inputRef?: Ref<TextInput>;
   error?: boolean;
 }) {
+  const { colors } = useTheme();
+  const t = useT();
   const [shown, setShown] = useState(false);
   return (
     <TextField
@@ -43,7 +46,7 @@ export function PasswordField({
       right={
         <PressableScale
           accessibilityRole="button"
-          accessibilityLabel={shown ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
+          accessibilityLabel={t(shown ? 'account.password.hide' : 'account.password.show', { field: label.toLowerCase() })}
           onPress={() => setShown((s) => !s)}
           style={styles.eye}
         >

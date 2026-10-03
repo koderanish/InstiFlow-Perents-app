@@ -3,24 +3,29 @@ import { CountUpText, PopIn } from '@/components/account/motion-bits';
 import { QueryBoundary, useChildPage } from '@/components/account/page-state';
 import { WashCard } from '@/components/account/surfaces';
 import { ChildChips } from '@/components/child-chips';
-import { AppText, Chip, ListCard, ListRow, Screen } from '@/components/ui';
+import { CollapsingScreen } from '@/components/collapsing-screen';
+import { AppText, Chip, ListCard, ListRow } from '@/components/ui';
 import { useFees } from '@/features/parent/hooks';
+import { useLocale, useT, type Locale, type TFunction } from '@/i18n';
 import { toISODate } from '@/lib/dates';
 import { dayMonth, firstName, rupees } from '@/lib/format';
 import { invoiceChip } from '@/lib/receipt';
 import { feesLine } from '@/lib/status-copy';
 import { Reveal } from '@/motion/reveal';
-import { colors, fonts } from '@/theme';
+import { fonts, useTheme } from '@/theme';
 import type { FeesData } from '@/types/parent';
 
-const dueText = (day: string | null, overdue: boolean): string => {
-  const when = dayMonth(day);
-  if (!when) return 'Please pay at the school office';
-  return overdue ? `Was due ${when}` : `Due by ${when}`;
+const dueText = (day: string | null, overdue: boolean, t: TFunction, locale: Locale): string => {
+  const when = dayMonth(day, locale);
+  if (!when) return t('account.fees.payAtOffice');
+  return overdue ? t('account.fees.wasDue', { date: when }) : t('account.fees.dueBy', { date: when });
 };
 
 function FeesContent({ data }: { data: FeesData }) {
-  const line = feesLine(data.summary);
+  const t = useT();
+  const locale = useLocale();
+  const { colors } = useTheme();
+  const line = feesLine(data.summary, t, locale);
   const today = toISODate(new Date());
   const { summary, invoices } = data;
   const hero = { fontFamily: fonts.display, fontSize: 52, lineHeight: 56 } as const;
@@ -31,24 +36,24 @@ function FeesContent({ data }: { data: FeesData }) {
           {line ? (
             <>
               <PopIn>
-                <Chip label={summary.overdue ? 'Overdue' : 'Due'} tone={summary.overdue ? 'bad' : 'warn'} />
+                <Chip label={summary.overdue ? t('account.fees.overdue') : t('account.fees.due')} tone={summary.overdue ? 'bad' : 'warn'} />
               </PopIn>
               <AppText variant="caption" style={{ fontSize: 15, marginTop: 14 }}>
-                {dueText(summary.nextDueDate, summary.overdue)}
+                {dueText(summary.nextDueDate, summary.overdue, t, locale)}
               </AppText>
               <CountUpText value={summary.dueAmount} format={rupees} style={[hero, { marginTop: 4 }]} />
               <AppText variant="caption" style={{ fontSize: 15, marginTop: 6 }}>
-                {summary.unpaidCount === 1 ? '1 invoice is unpaid' : `${summary.unpaidCount} invoices are unpaid`}
+                {t('account.fees.unpaid', { count: summary.unpaidCount })}
               </AppText>
             </>
           ) : (
             <>
               <PopIn>
-                <Chip label="All paid" tone="good" />
+                <Chip label={t('account.fees.allPaid')} tone="good" />
               </PopIn>
-              <AppText style={{ fontFamily: fonts.semibold, fontSize: 24, marginTop: 14 }}>Nothing is due</AppText>
+              <AppText style={{ fontFamily: fonts.semibold, fontSize: 24, marginTop: 14 }}>{t('account.fees.nothingDue')}</AppText>
               <AppText variant="caption" style={{ fontSize: 15, marginTop: 6 }}>
-                Thank you. Your receipts are listed below.
+                {t('account.fees.thanks')}
               </AppText>
             </>
           )}
@@ -56,15 +61,15 @@ function FeesContent({ data }: { data: FeesData }) {
       </Reveal>
       {line ? (
         <Reveal index={1}>
-          <Hint>Paying online is not available in this app yet. Please pay at the school office and ask for a receipt.</Hint>
+          <Hint>{t('account.fees.noOnline')}</Hint>
         </Reveal>
       ) : null}
       {invoices.length > 0 ? (
         <Reveal index={2}>
-          <Section title="This year">
+          <Section title={t('account.fees.thisYear')}>
             <ListCard>
               {invoices.map((inv, i) => {
-                const chip = invoiceChip(inv, today);
+                const chip = invoiceChip(inv, today, t, locale);
                 return (
                   <ListRow
                     key={inv.id}
@@ -87,32 +92,28 @@ function FeesContent({ data }: { data: FeesData }) {
 }
 
 export default function FeesScreen() {
+  const t = useT();
+  const locale = useLocale();
   const page = useChildPage();
   const fees = useFees(page.child?.id);
-  const sub = page.child ? `${firstName(page.child.name)}${page.child.className ? `, ${page.child.className}` : ''}` : null;
+  const sub = page.child ? `${firstName(page.child.name)}${page.child.className ? `, ${page.child.className}` : ''}` : undefined;
   return (
-    <Screen
+    <CollapsingScreen
+      title={t('tab.fees')}
+      subtitle={sub}
       refreshing={fees.isRefetching}
       onRefresh={() => {
         void page.refetch();
         void fees.refetch();
       }}
     >
-      <Reveal index={0}>
-        <AppText variant="title">Fees</AppText>
-        {sub ? (
-          <AppText variant="caption" numberOfLines={1} style={{ marginTop: 4 }}>
-            {sub}
-          </AppText>
-        ) : null}
-      </Reveal>
       {page.child ? (
         <>
           <ChildChips items={page.all} selectedId={page.child.id} />
           <QueryBoundary
             query={fees}
-            isEmpty={(d) => d.invoices.length === 0 && !feesLine(d.summary)}
-            empty={{ title: 'No fee invoices yet', message: 'Invoices will appear here when the school generates them.' }}
+            isEmpty={(d) => d.invoices.length === 0 && !feesLine(d.summary, t, locale)}
+            empty={{ title: t('account.fees.emptyTitle'), message: t('account.fees.emptyMessage') }}
           >
             {(data) => <FeesContent data={data} />}
           </QueryBoundary>
@@ -120,6 +121,6 @@ export default function FeesScreen() {
       ) : (
         page.gate
       )}
-    </Screen>
+    </CollapsingScreen>
   );
 }

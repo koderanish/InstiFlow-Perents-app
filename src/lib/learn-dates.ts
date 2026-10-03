@@ -1,6 +1,7 @@
-/** Calendar-day helpers. Work on "YYYY-MM-DD" keys so time zones never shift a school date. */
+import { monthShort } from '@/i18n/names';
+import type { Locale } from '@/i18n/types';
 
-const SHORT_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+/** Calendar-day helpers. Work on "YYYY-MM-DD" keys so time zones never shift a school date. */
 
 const pad = (n: number) => String(n).padStart(2, '0');
 
@@ -25,9 +26,9 @@ export const daysFromToday = (key: string | null | undefined, now: Date): number
 };
 
 /** "2026-10-09" -> { day: "9", month: "Oct" } for date tiles. */
-export const shortDateParts = (key: string | null | undefined): { day: string; month: string } | null => {
+export const shortDateParts = (key: string | null | undefined, locale: Locale = 'en'): { day: string; month: string } | null => {
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(key ?? '');
   if (!match) return null;
-  const month = SHORT_MONTHS[Number(match[2]) - 1];
+  const month = monthShort(locale, Number(match[2]));
   return month ? { day: String(Number(match[3])), month } : null;
 };

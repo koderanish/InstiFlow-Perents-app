@@ -1,0 +1,65 @@
+import type { common } from '../en/common';
+
+export const commonHi: Record<keyof typeof common, string> = {
+  'common.back': 'वापस',
+  'common.tryAgain': 'फिर से कोशिश करें',
+  'common.couldNotRefresh': 'रिफ़्रेश नहीं हो सका',
+  'common.loading': 'लोड हो रहा है',
+  'common.done': 'हो गया',
+  'common.cancel': 'रद्द करें',
+  'common.close': 'बंद करें',
+  'common.share': 'शेयर करें',
+  'common.save': 'सेव करें',
+  'common.call': 'कॉल करें',
+  'common.email': 'ईमेल',
+  'common.today': 'आज',
+  'common.tomorrow': 'कल',
+  'common.yesterday': 'बीता कल',
+
+  'tab.today': 'आज',
+  'tab.progress': 'प्रगति',
+  'tab.fees': 'फीस',
+  'tab.inbox': 'सूचनाएँ',
+
+  'greeting.morning': 'सुप्रभात',
+  'greeting.afternoon': 'नमस्कार',
+  'greeting.evening': 'शुभ संध्या',
+
+  'error.network': 'इंटरनेट कनेक्शन जाँचें और फिर कोशिश करें।',
+  'error.notFound': 'यह जानकारी नहीं मिली। कृपया स्कूल कार्यालय से संपर्क करें।',
+  'error.generic': 'हमारी तरफ़ से कुछ गड़बड़ हो गई। कृपया थोड़ी देर में फिर कोशिश करें।',
+
+  'offline.title': 'आप ऑफ़लाइन हैं',
+  'offline.message': 'पहले सहेजी गई जानकारी दिख रही है। इंटरनेट आते ही यह अपडेट हो जाएगी।',
+
+  'status.chip.present': 'उपस्थित',
+  'status.chip.late': 'देर से',
+  'status.chip.absent': 'अनुपस्थित',
+  'status.chip.leave': 'छुट्टी पर',
+  'status.chip.notMarked': 'अभी दर्ज नहीं',
+  'status.title.present': '{name} स्कूल में हैं',
+  'status.title.late': '{name} देर से पहुँचे',
+  'status.title.absent': '{name} आज अनुपस्थित हैं',
+  'status.title.leave': '{name} छुट्टी पर हैं',
+  'status.title.notMarked': 'उपस्थिति अभी दर्ज नहीं हुई है',
+
+  'bus.title': 'स्कूल बस',
+  'bus.droppedAt': '{time} पर उतारा गया',
+  'bus.dropped': 'उतारा जा चुका है',
+  'bus.onBusAt': 'बस में हैं, {time} पर चढ़े',
+  'bus.onBus': 'बस में हैं',
+  'bus.pickupDue': 'बस {time} पर लेने आएगी',
+  'bus.notPicked': 'अभी बस में नहीं चढ़े',
+
+  'fees.line.overdue': 'फीस बकाया है',
+  'fees.line.due': 'फीस जमा करनी है',
+  'fees.line.overdueSince': '{amount}, {date} तक जमा करनी थी',
+  'fees.line.dueBy': '{amount}, {date} तक',
+  'fees.line.amountOnly': '{amount}',
+
+  'diary.title': 'आज कक्षा में',
+  'diary.none': 'शिक्षकों ने अभी कुछ नहीं जोड़ा है',
+  'diary.updatedOf': '{total} में से {done} कक्षाओं का अपडेट आ गया',
+  'diary.updated_one': '{count} कक्षा का अपडेट आ गया',
+  'diary.updated_other': '{count} कक्षाओं का अपडेट आ गया',
+};

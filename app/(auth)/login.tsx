@@ -9,11 +9,16 @@ import { PasswordField } from '@/components/account/password-field';
 import { TextField } from '@/components/account/text-field';
 import { AppText, PrimaryButton } from '@/components/ui';
 import { SCHOOL } from '@/config/school';
+import { useT } from '@/i18n';
+import { isOffline } from '@/lib/errors';
 import { Reveal } from '@/motion/reveal';
 import { useAuthStore } from '@/stores/auth-store';
-import { colors, fonts } from '@/theme';
+import { fonts, useStyles, useTheme, type Theme } from '@/theme';
 
 export default function LoginScreen() {
+  const styles = useStyles(createStyles);
+  const { colors } = useTheme();
+  const t = useT();
   const login = useAuthStore((s) => s.login);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,7 +36,7 @@ export default function LoginScreen() {
     try {
       await login({ email: email.trim(), password });
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Sign-in failed. Please try again.');
+      setError(isOffline(e) ? t('error.network') : e instanceof Error ? e.message : t('account.login.failed'));
       shake();
     } finally {
       setBusy(false);
@@ -54,13 +59,13 @@ export default function LoginScreen() {
             <AppText variant="caption" style={{ marginTop: 16, fontFamily: fonts.medium }}>{SCHOOL.name}</AppText>
           </Reveal>
           <Reveal index={1}>
-            <AppText variant="title" style={{ fontSize: 34, lineHeight: 37, marginTop: 8 }}>Welcome back</AppText>
+            <AppText variant="title" style={{ fontSize: 34, lineHeight: 37, marginTop: 8 }}>{t('account.login.welcome')}</AppText>
           </Reveal>
 
           <Reveal index={2} style={{ marginTop: 36 }}>
             <Animated.View style={[{ gap: 18 }, shakeStyle]}>
               <TextField
-                label="Email"
+                label={t('account.login.email')}
                 error={!!error}
                 autoCapitalize="none"
                 autoComplete="email"
@@ -74,7 +79,7 @@ export default function LoginScreen() {
               />
               <PasswordField
                 inputRef={passwordRef}
-                label="Password"
+                label={t('account.login.password')}
                 error={!!error}
                 autoComplete="password"
                 returnKeyType="go"
@@ -84,7 +89,7 @@ export default function LoginScreen() {
               />
               {error ? <ErrorBanner message={error} /> : null}
               <Glide>
-                <PrimaryButton label="Sign in" onPress={() => void submit()} loading={busy} disabled={!canSubmit} />
+                <PrimaryButton label={t('account.login.submit')} onPress={() => void submit()} loading={busy} disabled={!canSubmit} />
               </Glide>
             </Animated.View>
           </Reveal>
@@ -92,7 +97,7 @@ export default function LoginScreen() {
           <Reveal index={3}>
             <View style={{ gap: 2, alignItems: 'center', paddingHorizontal: 8, marginTop: 18 }}>
               <AppText variant="caption" style={{ fontSize: 14, lineHeight: 20, textAlign: 'center' }}>
-                Forgot your password? Ask the school office to reset it.
+                {t('account.login.forgot')}
               </AppText>
               <AppText variant="caption" style={{ fontSize: 13, fontFamily: fonts.semibold, textAlign: 'center' }}>
                 {SCHOOL.name}
@@ -102,7 +107,7 @@ export default function LoginScreen() {
 
           <View style={styles.footer}>
             <View style={styles.footerMark} />
-            <AppText variant="caption" style={{ fontSize: 13 }}>Powered by InstiFlow</AppText>
+            <AppText variant="caption" style={{ fontSize: 13 }}>{t('account.poweredBy')}</AppText>
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -110,10 +115,11 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bg },
-  content: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 64, paddingBottom: 28 },
-  logo: { width: 64, height: 64, borderRadius: 20, backgroundColor: colors.accentTint, alignItems: 'center', justifyContent: 'center' },
-  footer: { marginTop: 'auto', paddingTop: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  footerMark: { width: 14, height: 14, borderRadius: 4, backgroundColor: colors.accent },
-});
+const createStyles = ({ colors }: Theme) =>
+  StyleSheet.create({
+    screen: { flex: 1, backgroundColor: colors.bg },
+    content: { flexGrow: 1, paddingHorizontal: 24, paddingTop: 64, paddingBottom: 28 },
+    logo: { width: 64, height: 64, borderRadius: 20, backgroundColor: colors.accentTint, alignItems: 'center', justifyContent: 'center' },
+    footer: { marginTop: 'auto', paddingTop: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
+    footerMark: { width: 14, height: 14, borderRadius: 4, backgroundColor: colors.accent },
+  });

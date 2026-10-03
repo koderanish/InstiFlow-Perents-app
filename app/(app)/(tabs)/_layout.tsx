@@ -6,7 +6,8 @@ import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-na
 
 import { tapHaptic } from '@/motion/haptics';
 import { SPRING_SNAPPY } from '@/motion/tokens';
-import { colors, fonts, shadow } from '@/theme';
+import { useT } from '@/i18n';
+import { fonts, useStyles, useTheme, type Theme } from '@/theme';
 
 type IconName = React.ComponentProps<typeof Feather>['name'];
 
@@ -30,6 +31,9 @@ const icon = (name: IconName) =>
   };
 
 export default function TabsLayout() {
+  const { colors } = useTheme();
+  const styles = useStyles(createStyles);
+  const t = useT();
   return (
     <Tabs
       screenListeners={{ tabPress: () => tapHaptic() }}
@@ -41,15 +45,16 @@ export default function TabsLayout() {
         tabBarStyle: styles.bar,
       }}
     >
-      <Tabs.Screen name="index" options={{ title: 'Today', tabBarIcon: icon('home') }} />
-      <Tabs.Screen name="progress" options={{ title: 'Progress', tabBarIcon: icon('bar-chart-2') }} />
-      <Tabs.Screen name="fees" options={{ title: 'Fees', tabBarIcon: icon('credit-card') }} />
-      <Tabs.Screen name="inbox" options={{ title: 'Inbox', tabBarIcon: icon('bell') }} />
+      <Tabs.Screen name="index" options={{ title: t('tab.today'), tabBarIcon: icon('home') }} />
+      <Tabs.Screen name="progress" options={{ title: t('tab.progress'), tabBarIcon: icon('bar-chart-2') }} />
+      <Tabs.Screen name="fees" options={{ title: t('tab.fees'), tabBarIcon: icon('credit-card') }} />
+      <Tabs.Screen name="inbox" options={{ title: t('tab.inbox'), tabBarIcon: icon('bell') }} />
     </Tabs>
   );
 }
 
 // A soft shadow lifts the bar off the page instead of a hard hairline.
-const styles = StyleSheet.create({
-  bar: { backgroundColor: colors.card, borderTopWidth: 0, height: 84, paddingTop: 8, ...shadow.card, shadowOffset: { width: 0, height: -4 } },
-});
+const createStyles = ({ colors, shadow }: Theme) =>
+  StyleSheet.create({
+    bar: { backgroundColor: colors.card, borderTopWidth: 0, height: 84, paddingTop: 8, ...shadow.card, shadowOffset: { width: 0, height: -4 } },
+  });

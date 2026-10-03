@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 
-import { colors } from '@/theme';
+import { useTheme } from '@/theme';
 
 import { clamp01 } from './motion-math';
 
@@ -14,8 +14,8 @@ export function AnimatedBar({
   ratio,
   delay = 0,
   height = 6,
-  color = colors.accent,
-  trackColor = colors.divider,
+  color,
+  trackColor,
   duration = 650,
   style,
 }: {
@@ -28,6 +28,7 @@ export function AnimatedBar({
   duration?: number;
   style?: StyleProp<ViewStyle>;
 }) {
+  const { colors } = useTheme();
   const reduced = useReducedMotion();
   const target = clamp01(ratio);
   const progress = useSharedValue(reduced ? target : 0);
@@ -43,8 +44,8 @@ export function AnimatedBar({
   const fill = useAnimatedStyle(() => ({ width: `${progress.value * 100}%` }));
 
   return (
-    <View accessibilityElementsHidden importantForAccessibility="no" style={[{ height, borderRadius: height / 2, backgroundColor: trackColor, overflow: 'hidden' }, style]}>
-      <Animated.View style={[{ height, borderRadius: height / 2, backgroundColor: color }, fill]} />
+    <View accessibilityElementsHidden importantForAccessibility="no" style={[{ height, borderRadius: height / 2, backgroundColor: trackColor ?? colors.divider, overflow: 'hidden' }, style]}>
+      <Animated.View style={[{ height, borderRadius: height / 2, backgroundColor: color ?? colors.accent }, fill]} />
     </View>
   );
 }

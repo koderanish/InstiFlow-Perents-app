@@ -7,27 +7,30 @@ import { Feather } from '@expo/vector-icons';
 import { IconBadge } from '@/components/icon-badge';
 import { PressableScale } from '@/motion/pressable-scale';
 import { SkeletonCard } from '@/motion/skeleton';
-import { colors, fonts, radius, shadow } from '@/theme';
+import { useT } from '@/i18n';
+import { fonts, radius, useStyles, useTheme, useThemed, type Theme } from '@/theme';
 import type { Tone } from '@/lib/status-copy';
 
 type Variant = 'title' | 'heading' | 'body' | 'caption' | 'label';
 
-const textStyles: Record<Variant, TextStyle> = {
+const textStyles = ({ colors }: Theme): Record<Variant, TextStyle> => ({
   title: { fontFamily: fonts.semibold, fontSize: 30, lineHeight: 33, letterSpacing: -0.75, color: colors.ink },
   heading: { fontFamily: fonts.semibold, fontSize: 17, color: colors.ink },
   body: { fontFamily: fonts.medium, fontSize: 16, color: colors.ink },
   caption: { fontFamily: fonts.body, fontSize: 14, color: colors.muted },
   label: { fontFamily: fonts.semibold, fontSize: 14, color: colors.ink },
-};
+});
 
 /** `tabular` keeps digits the same width so changing numbers (marks, ₹, counts) do not jiggle. */
 export function AppText({ variant = 'body', style, tabular, ...rest }: TextProps & { variant?: Variant; tabular?: boolean }) {
-  return <Text {...rest} style={[textStyles[variant], tabular ? tabularStyle : null, style]} />;
+  const styles = useStyles(textStyles);
+  return <Text {...rest} style={[styles[variant], tabular ? tabularStyle : null, style]} />;
 }
 
 const tabularStyle: TextStyle = { fontVariant: ['tabular-nums'] };
 
 export function Display({ children, style }: PropsWithChildren<{ style?: StyleProp<TextStyle> }>) {
+  const { colors } = useTheme();
   return (
     <Text maxFontSizeMultiplier={1.2} style={[{ fontFamily: fonts.display, fontSize: 64, lineHeight: 64, color: colors.ink, letterSpacing: -1, fontVariant: ['tabular-nums'] }, style]}>
       {children}
@@ -43,6 +46,8 @@ export function Screen({
   refreshing,
   onRefresh,
 }: PropsWithChildren<{ scroll?: boolean; header?: ReactNode; refreshing?: boolean; onRefresh?: () => void }>) {
+  const styles = useStyles(createStyles);
+  const { colors } = useTheme();
   const body = scroll ? (
     <ScrollView
       contentContainerStyle={styles.page}
@@ -63,18 +68,20 @@ export function Screen({
 }
 
 export function Card({ children, style, hero }: PropsWithChildren<{ style?: StyleProp<ViewStyle>; hero?: boolean }>) {
+  const styles = useStyles(createStyles);
   return <View style={[styles.card, hero && styles.hero, style]}>{children}</View>;
 }
 
-const toneColors: Record<Tone, { bg: string; fg: string }> = {
+export const toneColors = ({ colors }: Theme): Record<Tone, { bg: string; fg: string }> => ({
   good: { bg: colors.goodBg, fg: colors.goodFg },
   warn: { bg: colors.warnBg, fg: colors.warnFg },
   bad: { bg: colors.badBg, fg: colors.badFg },
   neutral: { bg: colors.accentTint, fg: colors.accentInk },
-};
+});
 
 export function Chip({ label, tone = 'neutral' }: { label: string; tone?: Tone }) {
-  const c = toneColors[tone];
+  const styles = useStyles(createStyles);
+  const c = useThemed(toneColors)[tone];
   return (
     <View style={[styles.chip, { backgroundColor: c.bg }]}>
       <View style={[styles.chipDot, { backgroundColor: c.fg }]} />
@@ -84,6 +91,8 @@ export function Chip({ label, tone = 'neutral' }: { label: string; tone?: Tone }
 }
 
 export function ListCard({ children }: PropsWithChildren) {
+  const styles = useStyles(createStyles);
+  const { shadow } = useTheme();
   return <View style={[styles.listCard, shadow.card]}>{children}</View>;
 }
 
@@ -105,6 +114,8 @@ export function ListRow({
   last?: boolean;
   right?: ReactNode;
 }) {
+  const styles = useStyles(createStyles);
+  const { colors } = useTheme();
   const inner = (
     <View style={[styles.row, !last && styles.rowDivider]}>
       {icon ? <IconBadge name={icon} tone={dot ?? 'neutral'} /> : null}
@@ -134,6 +145,8 @@ export function ListRow({
 }
 
 export function PrimaryButton({ label, onPress, loading, disabled }: { label: string; onPress: () => void; loading?: boolean; disabled?: boolean }) {
+  const styles = useStyles(createStyles);
+  const { colors } = useTheme();
   const off = disabled || loading;
   return (
     <PressableScale accessibilityRole="button" accessibilityState={{ disabled: !!off, busy: !!loading }} disabled={off} haptic="press" scaleTo={0.97} onPress={onPress} style={styles.button}>
@@ -143,9 +156,12 @@ export function PrimaryButton({ label, onPress, loading, disabled }: { label: st
 }
 
 export function BackHeader({ title, subtitle, onBack }: { title: string; subtitle?: string; onBack: () => void }) {
+  const styles = useStyles(createStyles);
+  const { colors } = useTheme();
+  const t = useT();
   return (
     <View style={styles.backHeader}>
-      <PressableScale accessibilityRole="button" accessibilityLabel="Back" onPress={onBack} style={styles.backButton} hitSlop={8}>
+      <PressableScale accessibilityRole="button" accessibilityLabel={t('common.back')} onPress={onBack} style={styles.backButton} hitSlop={8}>
         <Feather name="chevron-left" size={22} color={colors.ink} />
       </PressableScale>
       <View>
@@ -160,8 +176,9 @@ export function BackHeader({ title, subtitle, onBack }: { title: string; subtitl
 
 /** Shape-of-the-page placeholder instead of a spinner. `label` is read out by screen readers. */
 export function Loading({ label }: { label?: string }) {
+  const t = useT();
   return (
-    <View accessibilityRole="progressbar" accessibilityLabel={label ?? 'Loading'} style={{ gap: 16 }}>
+    <View accessibilityRole="progressbar" accessibilityLabel={label ?? t('common.loading')} style={{ gap: 16 }}>
       <SkeletonCard tall />
       <SkeletonCard />
     </View>
@@ -169,6 +186,7 @@ export function Loading({ label }: { label?: string }) {
 }
 
 export function EmptyState({ title, message, icon }: { title: string; message?: string; icon?: React.ComponentProps<typeof Feather>['name'] }) {
+  const styles = useStyles(createStyles);
   return (
     <View style={styles.center}>
       {icon ? (
@@ -183,20 +201,23 @@ export function EmptyState({ title, message, icon }: { title: string; message?: 
 }
 
 export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  const styles = useStyles(createStyles);
+  const t = useT();
   return (
     <View style={styles.center}>
-      <AppText variant="heading" style={{ textAlign: 'center' }}>Could not refresh</AppText>
+      <AppText variant="heading" style={{ textAlign: 'center' }}>{t('common.couldNotRefresh')}</AppText>
       <AppText variant="caption" style={{ textAlign: 'center', marginTop: 6, lineHeight: 21 }}>{message}</AppText>
       {onRetry ? (
         <View style={{ marginTop: 18, alignSelf: 'stretch', paddingHorizontal: 40 }}>
-          <PrimaryButton label="Try again" onPress={onRetry} />
+          <PrimaryButton label={t('common.tryAgain')} onPress={onRetry} />
         </View>
       ) : null}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = ({ colors, shadow }: Theme) =>
+  StyleSheet.create({
   screen: { flex: 1, backgroundColor: colors.bg },
   page: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40, gap: 20 },
   card: { backgroundColor: colors.card, borderRadius: radius.card, padding: 20, ...shadow.card },
@@ -213,4 +234,4 @@ const styles = StyleSheet.create({
   backHeader: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 20, paddingTop: 12 },
   backButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   center: { alignItems: 'center', justifyContent: 'center', paddingVertical: 48, paddingHorizontal: 32 },
-});
+  });

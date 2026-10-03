@@ -14,6 +14,18 @@ describe('prefs', () => {
     expect(parsePrefs(serializePrefs(p))).toEqual(p);
   });
 
+  it('saves theme and language, and ignores unknown values', () => {
+    const p = defaultPrefs();
+    expect(p.themeMode).toBe('system');
+    expect(p.language).toBeNull();
+    p.themeMode = 'dark';
+    p.language = 'hi';
+    expect(parsePrefs(serializePrefs(p))).toEqual(p);
+    const bad = parsePrefs(JSON.stringify({ themeMode: 'purple', language: 'fr' }));
+    expect(bad.themeMode).toBe('system');
+    expect(bad.language).toBeNull();
+  });
+
   it('falls back safely on damaged data', () => {
     expect(parsePrefs(null)).toEqual(defaultPrefs());
     expect(parsePrefs('not json')).toEqual(defaultPrefs());

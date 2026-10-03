@@ -1,4 +1,6 @@
-import { monthGrid, monthLabel, shiftMonth, statusColor, statusTint } from '../calendar';
+import { darkPalette, lightPalette } from '@/theme/palette';
+
+import { monthGrid, monthLabel, shiftMonth, statusColor, statusColorFor, statusTint, statusTintFor } from '../calendar';
 
 describe('calendar', () => {
   it('labels months', () => {
@@ -29,5 +31,19 @@ describe('calendar', () => {
     expect(statusTint('present')).toBe('#1F9D6326');
     expect(statusTint(null)).toBe('transparent');
     expect(statusTint('unknown')).toBe('transparent');
+  });
+
+  it('picks status colours from the active palette', () => {
+    expect(statusColorFor('present', lightPalette)).toBe(lightPalette.goodDot);
+    expect(statusColorFor('present', darkPalette)).toBe(darkPalette.goodDot);
+    expect(statusColorFor('absent', darkPalette)).toBe(darkPalette.badFg);
+    expect(statusColorFor('leave', lightPalette)).toBe(lightPalette.faint);
+    expect(statusColorFor(null, lightPalette)).toBe('transparent');
+    expect(statusColorFor('unknown', darkPalette)).toBe('transparent');
+  });
+
+  it('tints themed day cells softly', () => {
+    expect(statusTintFor('late', darkPalette)).toBe(`${darkPalette.warnFg}26`);
+    expect(statusTintFor(null, lightPalette)).toBe('transparent');
   });
 });

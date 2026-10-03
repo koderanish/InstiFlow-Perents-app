@@ -3,19 +3,22 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { AttendanceHero } from '@/components/account/attendance-hero';
-import { ChildChips } from '@/components/child-chips';
+import { ChildSwitcher } from '@/components/account/child-sheet';
+import { useErrorText } from '@/components/account/error-text';
+import { FeeBanner } from '@/components/account/fee-banner';
+import { StaleBanner } from '@/components/account/page-state';
 import { ChildGate } from '@/components/child-gate';
 import { QuickLinks } from '@/components/quick-links';
 import { AppText, ErrorState, ListCard, ListRow, Loading, Screen } from '@/components/ui';
 import { SCHOOL } from '@/config/school';
 import { useChildren, useToday } from '@/features/parent/hooks';
+import { useLocale, useT } from '@/i18n';
 import { firstName, greeting, initials } from '@/lib/format';
-import { friendlyError } from '@/lib/errors';
 import { attendanceHero, busLine, diaryLine, feesLine } from '@/lib/status-copy';
 import { PressableScale } from '@/motion/pressable-scale';
 import { Reveal } from '@/motion/reveal';
 import { useAuthStore } from '@/stores/auth-store';
-import { colors, fonts } from '@/theme';
+import { fonts, useStyles, useTheme, type Theme } from '@/theme';
 import type { ParentChild } from '@/types/parent';
 
 /**
@@ -23,30 +26,39 @@ import type { ParentChild } from '@/types/parent';
  * after a switch between children they enter together, so changing child feels like a quick cross-fade.
  */
 function TodayBody({ child, stagger }: { child: ParentChild; stagger: boolean }) {
+  const t = useT();
+  const locale = useLocale();
+  const errorText = useErrorText();
   const today = useToday(child.id);
-  if (today.isLoading) return <Loading label={`Loading ${firstName(child.name)}'s day`} />;
-  if (today.isError || !today.data) {
-    return <ErrorState message={friendlyError(today.error)} onRetry={() => void today.refetch()} />;
+  if (today.isLoading) return <Loading label={t('account.today.loadingDay', { name: firstName(child.name) })} />;
+  // Saved data stays on screen when a refresh fails (for example offline); only an empty page shows the error.
+  if (!today.data) {
+    return <ErrorState message={errorText(today.error)} onRetry={() => void today.refetch()} />;
   }
   const d = today.data;
-  const classLabel = [d.child.className, d.child.sectionName].filter(Boolean).join(' ') || 'Class not assigned';
-  const hero = d.attendance ? attendanceHero(d.attendance.today.status, firstName(child.name), classLabel) : null;
-  const bus = busLine(d.bus);
-  const fees = feesLine(d.fees);
+  const classLabel = [d.child.className, d.child.sectionName].filter(Boolean).join(' ') || t('account.today.noClass');
+  const hero = d.attendance ? attendanceHero(d.attendance.today.status, firstName(child.name), classLabel, t) : null;
+  const bus = busLine(d.bus, t);
+  const fees = feesLine(d.fees, t, locale);
   const rows = [
     bus ? { ...bus, icon: 'truck' as const, href: '/(app)/bus' as const } : null,
-    fees ? { ...fees, icon: 'credit-card' as const, href: '/(app)/(tabs)/fees' as const } : null,
-    { ...diaryLine(d.diary), icon: 'book-open' as const, href: '/(app)/diary' as const },
+    { ...diaryLine(d.diary, t), icon: 'book-open' as const, href: '/(app)/diary' as const },
     d.notices && d.notices[0]
-      ? { title: 'From the school', subtitle: d.notices[0].title, tone: 'neutral' as const, icon: 'bell' as const, href: '/(app)/(tabs)/inbox' as const }
+      ? { title: t('account.today.fromSchool'), subtitle: d.notices[0].title, tone: 'neutral' as const, icon: 'bell' as const, href: '/(app)/(tabs)/inbox' as const }
       : null,
   ].filter((r): r is NonNullable<typeof r> => !!r);
 
   return (
     <>
+      {today.isError ? <StaleBanner error={today.error} savedAt={today.dataUpdatedAt} /> : null}
       {hero && d.attendance ? (
         <Reveal index={stagger ? 3 : 0}>
           <AttendanceHero hero={hero} status={d.attendance.today.status} />
+        </Reveal>
+      ) : null}
+      {fees ? (
+        <Reveal index={stagger ? 3 : 0}>
+          <FeeBanner line={fees} />
         </Reveal>
       ) : null}
       <Reveal index={stagger ? 4 : 0}>
@@ -70,7 +82,7 @@ function TodayContent({ child, all }: { child: ParentChild; all: ParentChild[] }
   }
   return (
     <>
-      <ChildChips items={all} selectedId={child.id} revealIndex={2} />
+      <ChildSwitcher items={all} selectedId={child.id} revealIndex={2} />
       <TodayBody key={child.id} child={child} stagger={!switched} />
       <QuickLinks revealIndex={5} />
     </>
@@ -78,6 +90,9 @@ function TodayContent({ child, all }: { child: ParentChild; all: ParentChild[] }
 }
 
 export default function TodayScreen() {
+  const styles = useStyles(createStyles);
+  const { colors } = useTheme();
+  const t = useT();
   const user = useAuthStore((s) => s.user);
   const { refetch } = useChildren();
   return (
@@ -93,7 +108,7 @@ export default function TodayScreen() {
             </AppText>
           </View>
           <Link href="/(app)/profile" asChild>
-            <PressableScale accessibilityRole="button" accessibilityLabel="Your profile" style={styles.avatar}>
+            <PressableScale accessibilityRole="button" accessibilityLabel={t('account.today.profile')} style={styles.avatar}>
               <AppText style={{ fontFamily: fonts.bold, fontSize: 14 }}>{initials(user?.full_name ?? '')}</AppText>
             </PressableScale>
           </Link>
@@ -101,7 +116,7 @@ export default function TodayScreen() {
       </Reveal>
       <Reveal index={1}>
         <AppText variant="title">
-          {greeting()},{'\n'}
+          {greeting(new Date(), t)},{'\n'}
           {firstName(user?.full_name ?? '')}
         </AppText>
       </Reveal>
@@ -110,9 +125,10 @@ export default function TodayScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-  school: { flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 1 },
-  logo: { width: 32, height: 32, borderRadius: 10, backgroundColor: colors.accentTint, alignItems: 'center', justifyContent: 'center' },
-  avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
-});
+const createStyles = ({ colors }: Theme) =>
+  StyleSheet.create({
+    header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
+    school: { flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 1 },
+    logo: { width: 32, height: 32, borderRadius: 10, backgroundColor: colors.accentTint, alignItems: 'center', justifyContent: 'center' },
+    avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+  });

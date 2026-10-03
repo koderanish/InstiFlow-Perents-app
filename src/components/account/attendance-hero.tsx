@@ -16,11 +16,12 @@ import Svg, { Circle } from 'react-native-svg';
 
 import { WashCard } from '@/components/account/surfaces';
 import { AppText, Chip } from '@/components/ui';
+import { useT } from '@/i18n';
 import type { AttendanceStatus } from '@/types/parent';
 import { PressableScale } from '@/motion/pressable-scale';
 import { SPRING } from '@/motion/tokens';
 import type { Hero, Tone } from '@/lib/status-copy';
-import { colors, fonts, radius } from '@/theme';
+import { fonts, radius, useThemed, type Theme } from '@/theme';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -28,12 +29,12 @@ const GLYPH = 56;
 const RING_RADIUS = 26;
 const CIRCUMFERENCE = 2 * Math.PI * RING_RADIUS;
 
-const toneColors: Record<Tone, { bg: string; fg: string }> = {
+const toneColors = ({ colors }: Theme): Record<Tone, { bg: string; fg: string }> => ({
   good: { bg: colors.goodBg, fg: colors.goodFg },
   warn: { bg: colors.warnBg, fg: colors.warnFg },
   bad: { bg: colors.badBg, fg: colors.badFg },
   neutral: { bg: colors.card, fg: colors.accentInk },
-};
+});
 
 const iconFor = (status: AttendanceStatus): React.ComponentProps<typeof Feather>['name'] => {
   switch (status) {
@@ -55,7 +56,7 @@ function StatusGlyph({ tone, icon }: { tone: Tone; icon: React.ComponentProps<ty
   const reduced = useReducedMotion();
   const ring = useSharedValue(reduced ? 1 : 0);
   const mark = useSharedValue(reduced ? 1 : 0);
-  const c = toneColors[tone];
+  const c = useThemed(toneColors)[tone];
 
   useEffect(() => {
     if (reduced) return;
@@ -92,9 +93,10 @@ function StatusGlyph({ tone, icon }: { tone: Tone; icon: React.ComponentProps<ty
 
 /** The Today hero: status, a gradient wash in the school accent, and an animated glyph. Taps through to Attendance. */
 export function AttendanceHero({ hero, status }: { hero: Hero; status: AttendanceStatus }) {
+  const t = useT();
   return (
     <Link href="/(app)/attendance" asChild>
-      <PressableScale accessibilityRole="button" accessibilityLabel={`Attendance. ${hero.title}. ${hero.chip}`} scaleTo={0.98} style={styles.press}>
+      <PressableScale accessibilityRole="button" accessibilityLabel={t('account.today.attendanceLabel', { title: hero.title, chip: hero.chip })} scaleTo={0.98} style={styles.press}>
         <WashCard>
           <View style={styles.row}>
             <View style={styles.text}>

@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Keyboard, StyleSheet, TextInput, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
+import { useErrorText } from '@/components/account/error-text';
 import { Hint, Section } from '@/components/account/bits';
 import { DayStrip } from '@/components/account/date-strip';
 import { DrawnCheck } from '@/components/account/drawn-check';
@@ -14,21 +15,26 @@ import { SelectChip } from '@/components/account/select-chip';
 import { WashCard } from '@/components/account/surfaces';
 import { AppText, BackHeader, Card, Chip, ListCard, ListRow, PrimaryButton } from '@/components/ui';
 import { useApplyLeave, useChildProfile, useLeave } from '@/features/parent/hooks';
+import { useLocale, useT } from '@/i18n';
 import { dayStrip, shortDate, toISODate } from '@/lib/dates';
-import { friendlyError, validationMessage } from '@/lib/errors';
+import { validationMessage } from '@/lib/errors';
 import { firstName } from '@/lib/format';
-import { composeReason, leaveRange, leaveStatusChip, MAX_LEAVE_DAYS, REASON_CHOICES, REASON_MAX, validateLeave, type ReasonChoice } from '@/lib/leave';
+import { composeReason, leaveRange, leaveStatusChip, MAX_LEAVE_DAYS, REASON_CHOICES, REASON_MAX, reasonLabelKey, validateLeave, type ReasonChoice } from '@/lib/leave';
 import { successHaptic } from '@/motion/haptics';
 import { enterFade, exitFade } from '@/motion/presets';
 import { PressableScale } from '@/motion/pressable-scale';
 import { Reveal } from '@/motion/reveal';
-import { colors, fonts } from '@/theme';
+import { fonts, useStyles, useTheme, type Theme } from '@/theme';
 import type { LeaveData, ParentChild } from '@/types/parent';
 
 type Field = 'from' | 'to' | null;
 
 function DateField({ label, day, open, onPress }: { label: string; day: string; open: boolean; onPress: () => void }) {
-  const text = shortDate(day) ?? day;
+  const styles = useStyles(createStyles);
+  const { colors } = useTheme();
+  const t = useT();
+  const locale = useLocale();
+  const text = shortDate(day, locale) ?? day;
   return (
     <View style={{ flex: 1 }}>
       <AppText variant="caption" style={{ fontSize: 13, marginBottom: 6 }}>
@@ -36,8 +42,8 @@ function DateField({ label, day, open, onPress }: { label: string; day: string; 
       </AppText>
       <PressableScale
         accessibilityRole="button"
-        accessibilityLabel={`${label} date, ${text}`}
-        accessibilityHint="Opens the day chooser"
+        accessibilityLabel={t('account.leave.dateLabel', { label, text })}
+        accessibilityHint={t('account.leave.dateHint')}
         accessibilityState={{ expanded: open }}
         onPress={() => {
           Keyboard.dismiss();
@@ -52,9 +58,14 @@ function DateField({ label, day, open, onPress }: { label: string; day: string; 
 }
 
 function LeaveForm({ child, teacher }: { child: ParentChild; teacher: string | null }) {
+  const styles = useStyles(createStyles);
+  const { colors } = useTheme();
+  const t = useT();
+  const locale = useLocale();
+  const errorText = useErrorText();
   const apply = useApplyLeave(child.id);
   const today = useMemo(() => toISODate(new Date()), []);
-  const days = useMemo(() => dayStrip(today, MAX_LEAVE_DAYS), [today]);
+  const days = useMemo(() => dayStrip(today, MAX_LEAVE_DAYS, locale), [today, locale]);
   const [start, setStart] = useState(today);
   const [end, setEnd] = useState(today);
   const [open, setOpen] = useState<Field>(null);
@@ -78,7 +89,7 @@ function LeaveForm({ child, teacher }: { child: ParentChild; teacher: string | n
   const submit = () => {
     Keyboard.dismiss();
     const input = { startDate: start, endDate: end, reason: composeReason(choice, note) };
-    const check = validateLeave(input);
+    const check = validateLeave(input, t);
     if (!check.ok) {
       setError(check.message);
       return;
@@ -92,7 +103,7 @@ function LeaveForm({ child, teacher }: { child: ParentChild; teacher: string | n
         setNote('');
         setOpen(null);
       },
-      onError: (e) => setError(validationMessage(e) ?? friendlyError(e)),
+      onError: (e) => setError(validationMessage(e) ?? errorText(e)),
     });
   };
 
@@ -102,14 +113,14 @@ function LeaveForm({ child, teacher }: { child: ParentChild; teacher: string | n
         <WashCard tint={colors.goodBg}>
           <DrawnCheck />
           <View style={{ marginTop: 16 }}>
-            <Chip label="Sent" tone="good" />
+            <Chip label={t('account.leave.sentChip')} tone="good" />
           </View>
-          <AppText style={{ fontFamily: fonts.semibold, fontSize: 24, lineHeight: 28, marginTop: 14 }}>Leave note sent</AppText>
+          <AppText style={{ fontFamily: fonts.semibold, fontSize: 24, lineHeight: 28, marginTop: 14 }}>{t('account.leave.sentTitle')}</AppText>
           <AppText variant="caption" style={{ fontSize: 15, lineHeight: 22, marginTop: 6 }}>
-            {teacher ? `${teacher} and the school office can see it now.` : 'The school can see it now.'} You will see its status in the list below.
+            {teacher ? t('account.leave.sentTeacher', { teacher }) : t('account.leave.sentSchool')}
           </AppText>
           <View style={{ marginTop: 18 }}>
-            <PrimaryButton label="Write another note" onPress={() => setSent(false)} />
+            <PrimaryButton label={t('account.leave.another')} onPress={() => setSent(false)} />
           </View>
         </WashCard>
       </Reveal>
@@ -121,13 +132,13 @@ function LeaveForm({ child, teacher }: { child: ParentChild; teacher: string | n
       <Reveal index={0}>
         <Card style={{ gap: 18 }}>
           <View style={{ flexDirection: 'row', gap: 12 }}>
-            <DateField label="From" day={start} open={open === 'from'} onPress={() => setOpen(open === 'from' ? null : 'from')} />
-            <DateField label="To" day={end} open={open === 'to'} onPress={() => setOpen(open === 'to' ? null : 'to')} />
+            <DateField label={t('account.leave.from')} day={start} open={open === 'from'} onPress={() => setOpen(open === 'from' ? null : 'from')} />
+            <DateField label={t('account.leave.to')} day={end} open={open === 'to'} onPress={() => setOpen(open === 'to' ? null : 'to')} />
           </View>
           {open ? (
             <Animated.View entering={enterFade(0)} exiting={exitFade}>
               <DayStrip
-                label={open === 'from' ? 'Choose the first day' : 'Choose the last day'}
+                label={open === 'from' ? t('account.leave.chooseFirst') : t('account.leave.chooseLast')}
                 days={days}
                 selected={open === 'from' ? start : end}
                 minDay={open === 'to' ? start : undefined}
@@ -138,13 +149,13 @@ function LeaveForm({ child, teacher }: { child: ParentChild; teacher: string | n
 
           <Glide>
             <AppText variant="caption" style={{ fontSize: 13, marginBottom: 8 }}>
-              Reason
+              {t('account.leave.reason')}
             </AppText>
             <View style={styles.choices}>
               {REASON_CHOICES.map((r) => (
                 <SelectChip
                   key={r}
-                  label={r}
+                  label={t(reasonLabelKey(r))}
                   selected={choice === r}
                   onPress={() => {
                     Keyboard.dismiss();
@@ -158,19 +169,20 @@ function LeaveForm({ child, teacher }: { child: ParentChild; teacher: string | n
 
           <Glide>
             <AppText variant="caption" style={{ fontSize: 13, marginBottom: 6 }}>
-              Note for the teacher
+              {t('account.leave.note')}
             </AppText>
             <TextInput
-              accessibilityLabel="Note for the teacher"
+              accessibilityLabel={t('account.leave.note')}
               multiline
               maxLength={REASON_MAX}
-              placeholder={`For example, ${firstName(child.name)} has a fever and the doctor advised rest.`}
+              placeholder={t('account.leave.placeholder', { name: firstName(child.name) })}
               placeholderTextColor={colors.faint}
+              selectionColor={colors.accent}
               style={styles.note}
               textAlignVertical="top"
               value={note}
-              onChangeText={(t) => {
-                setNote(t);
+              onChangeText={(text) => {
+                setNote(text);
                 setError(null);
               }}
             />
@@ -179,25 +191,27 @@ function LeaveForm({ child, teacher }: { child: ParentChild; teacher: string | n
       </Reveal>
       {error ? <ErrorBanner message={error} /> : null}
       <Reveal index={1} style={{ gap: 20 }}>
-        <Hint>The school will review your note. You can see whether it was approved in the list below.</Hint>
-        <PrimaryButton label={teacher ? `Send to ${teacher}` : 'Send to the school'} onPress={submit} loading={apply.isPending} />
+        <Hint>{t('account.leave.hint')}</Hint>
+        <PrimaryButton label={teacher ? t('account.leave.sendTo', { teacher }) : t('account.leave.sendSchool')} onPress={submit} loading={apply.isPending} />
       </Reveal>
     </>
   );
 }
 
 function History({ data }: { data: LeaveData }) {
+  const t = useT();
+  const locale = useLocale();
   const notes = [...data.notes].sort((a, b) => b.requestedAt.localeCompare(a.requestedAt));
   return (
-    <Section title="Earlier notes">
+    <Section title={t('account.leave.earlier')}>
       <ListCard>
         {notes.map((n, i) => {
-          const chip = leaveStatusChip(n.status);
-          const lines = [n.reason, n.reviewNote ? `School's note: ${n.reviewNote}` : null].filter((l): l is string => !!l);
+          const chip = leaveStatusChip(n.status, t);
+          const lines = [n.reason, n.reviewNote ? t('account.leave.schoolNote', { note: n.reviewNote }) : null].filter((l): l is string => !!l);
           return (
             <Reveal key={n.id} index={i}>
               <ListRow
-                title={leaveRange(n.startDate, n.endDate)}
+                title={leaveRange(n.startDate, n.endDate, t, locale)}
                 subtitle={lines.join('\n') || undefined}
                 icon="file-text"
                 dot={chip.tone}
@@ -213,6 +227,7 @@ function History({ data }: { data: LeaveData }) {
 }
 
 export default function LeaveScreen() {
+  const t = useT();
   const goBack = useGoBack();
   const page = useChildPage();
   const leave = useLeave(page.child?.id);
@@ -222,7 +237,7 @@ export default function LeaveScreen() {
 
   return (
     <FormScreen
-      header={<BackHeader title="Leave note" subtitle={subtitle} onBack={goBack} />}
+      header={<BackHeader title={t('account.leave.title')} subtitle={subtitle} onBack={goBack} />}
       refreshing={leave.isRefetching}
       onRefresh={() => {
         void page.refetch();
@@ -233,7 +248,11 @@ export default function LeaveScreen() {
       {page.child ? (
         <>
           <LeaveForm child={page.child} teacher={teacher} />
-          <QueryBoundary query={leave} isEmpty={(d) => d.notes.length === 0} empty={{ title: 'No leave notes yet', message: 'Notes you send will be listed here with their status.' }}>
+          <QueryBoundary
+            query={leave}
+            isEmpty={(d) => d.notes.length === 0}
+            empty={{ title: t('account.leave.emptyTitle'), message: t('account.leave.emptyMessage') }}
+          >
             {(data) => <History data={data} />}
           </QueryBoundary>
         </>
@@ -244,8 +263,9 @@ export default function LeaveScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  field: { height: 48, borderRadius: 16, backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 14, justifyContent: 'center' },
-  choices: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  note: { minHeight: 96, borderRadius: 16, backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 14, paddingVertical: 12, fontFamily: fonts.body, fontSize: 16, lineHeight: 22, color: colors.ink },
-});
+const createStyles = ({ colors }: Theme) =>
+  StyleSheet.create({
+    field: { height: 48, borderRadius: 16, backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 14, justifyContent: 'center' },
+    choices: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    note: { minHeight: 96, borderRadius: 16, backgroundColor: colors.bg, borderWidth: 1, borderColor: colors.border, paddingHorizontal: 14, paddingVertical: 12, fontFamily: fonts.body, fontSize: 16, lineHeight: 22, color: colors.ink },
+  });
