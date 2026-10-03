@@ -2,10 +2,12 @@ import { StyleSheet, Text, View } from 'react-native';
 import Animated, { Easing, FadeIn, Keyframe, ReduceMotion } from 'react-native-reanimated';
 
 import { SCHOOL } from '@/config/school';
-import { colors, fonts, shadow } from '@/theme';
+import { useT } from '@/i18n';
+import { fonts, useStyles, useTheme, type Theme } from '@/theme';
 
 /** The school's letters on a soft accent tile. Uses the school accent, never a fixed colour. */
 export function SchoolMark({ size = 64 }: { size?: number }) {
+  const { colors, shadow } = useTheme();
   return (
     <View
       accessibilityElementsHidden
@@ -18,10 +20,12 @@ export function SchoolMark({ size = 64 }: { size?: number }) {
 }
 
 export function PoweredBy() {
+  const styles = useStyles(createStyles);
+  const t = useT();
   return (
     <View style={styles.powered}>
       <View style={styles.poweredMark} />
-      <Text style={styles.poweredText}>Powered by InstiFlow</Text>
+      <Text style={styles.poweredText}>{t('account.poweredBy')}</Text>
     </View>
   );
 }
@@ -41,8 +45,10 @@ const fadeInAfter = (delay: number) => FadeIn.delay(delay).duration(360).reduceM
  * The root layout keeps this mounted and fades it out over the app, so there is no flash between them.
  */
 export function BrandSplash() {
+  const styles = useStyles(createStyles);
+  const t = useT();
   return (
-    <View accessible accessibilityLabel={`${SCHOOL.name}, loading`} style={styles.splash}>
+    <View accessible accessibilityLabel={t('account.splash.loading', { name: SCHOOL.name })} style={styles.splash}>
       <View style={styles.center}>
         <Animated.View entering={logoIn}>
           <SchoolMark size={112} />
@@ -58,12 +64,13 @@ export function BrandSplash() {
   );
 }
 
-const styles = StyleSheet.create({
-  splash: { flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' },
-  center: { alignItems: 'center', gap: 20, paddingHorizontal: 32 },
-  name: { fontFamily: fonts.semibold, fontSize: 22, color: colors.ink, textAlign: 'center' },
-  bottom: { position: 'absolute', bottom: 44, left: 0, right: 0, alignItems: 'center' },
-  powered: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  poweredMark: { width: 14, height: 14, borderRadius: 4, backgroundColor: colors.accent },
-  poweredText: { fontFamily: fonts.body, fontSize: 13, color: colors.muted },
-});
+const createStyles = ({ colors }: Theme) =>
+  StyleSheet.create({
+    splash: { flex: 1, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' },
+    center: { alignItems: 'center', gap: 20, paddingHorizontal: 32 },
+    name: { fontFamily: fonts.semibold, fontSize: 22, color: colors.ink, textAlign: 'center' },
+    bottom: { position: 'absolute', bottom: 44, left: 0, right: 0, alignItems: 'center' },
+    powered: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    poweredMark: { width: 14, height: 14, borderRadius: 4, backgroundColor: colors.accent },
+    poweredText: { fontFamily: fonts.body, fontSize: 13, color: colors.muted },
+  });

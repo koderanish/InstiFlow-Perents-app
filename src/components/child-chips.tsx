@@ -3,12 +3,13 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withSpring } from 'react-native-reanimated';
 
 import { AppText } from '@/components/ui';
+import { useT } from '@/i18n';
 import { firstName } from '@/lib/format';
 import { PressableScale } from '@/motion/pressable-scale';
 import { Reveal } from '@/motion/reveal';
 import { SPRING } from '@/motion/tokens';
 import { useChildStore } from '@/stores/child-store';
-import { colors, fonts, shadow } from '@/theme';
+import { fonts, useStyles, useTheme, type Theme } from '@/theme';
 import type { ParentChild } from '@/types/parent';
 
 interface Rect {
@@ -19,10 +20,13 @@ interface Rect {
 }
 
 /**
- * Child switcher: a white pill on a soft track that slides to whoever is selected.
+ * Child switcher: a card-coloured pill on a soft track that slides to whoever is selected.
  * Hidden when there is only one child. Keep it above the keyed content, so it is not remounted on a switch.
  */
 export function ChildChips({ items, selectedId, revealIndex = 1 }: { items: ParentChild[]; selectedId: number | undefined; revealIndex?: number }) {
+  const styles = useStyles(createStyles);
+  const { colors } = useTheme();
+  const t = useT();
   const select = useChildStore((s) => s.select);
   const reduced = useReducedMotion();
   const rects = useRef<Record<number, Rect>>({});
@@ -76,7 +80,7 @@ export function ChildChips({ items, selectedId, revealIndex = 1 }: { items: Pare
               key={c.id}
               accessibilityRole="button"
               accessibilityState={{ selected: on }}
-              accessibilityLabel={`Show ${c.name}`}
+              accessibilityLabel={t('account.chips.show', { name: c.name })}
               haptic={on ? false : 'tap'}
               hitSlop={4}
               onPress={() => select(c.id)}
@@ -97,9 +101,10 @@ export function ChildChips({ items, selectedId, revealIndex = 1 }: { items: Pare
   );
 }
 
-const styles = StyleSheet.create({
-  wrap: { alignSelf: 'flex-start' },
-  track: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, padding: 4, borderRadius: 24, backgroundColor: colors.border },
-  pill: { position: 'absolute', top: 0, left: 0, borderRadius: 20, backgroundColor: colors.card, ...shadow.card },
-  chip: { height: 40, paddingHorizontal: 16, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-});
+const createStyles = ({ colors, shadow }: Theme) =>
+  StyleSheet.create({
+    wrap: { alignSelf: 'flex-start' },
+    track: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, padding: 4, borderRadius: 24, backgroundColor: colors.border },
+    pill: { position: 'absolute', top: 0, left: 0, borderRadius: 20, backgroundColor: colors.card, ...shadow.card },
+    chip: { height: 40, paddingHorizontal: 16, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  });

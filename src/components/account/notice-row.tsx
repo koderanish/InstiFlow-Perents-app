@@ -4,19 +4,24 @@ import { StyleSheet, View } from 'react-native';
 
 import { IconBadge } from '@/components/icon-badge';
 import { AppText } from '@/components/ui';
+import { useLocale, useT } from '@/i18n';
 import { postedLabel } from '@/lib/dates';
 import { categoryLabel, priorityInfo } from '@/lib/notices';
 import { PressableScale } from '@/motion/pressable-scale';
-import { colors, fonts } from '@/theme';
+import { fonts, useStyles, useTheme, type Palette, type Theme } from '@/theme';
 import type { Notice } from '@/types/parent';
 
-const toneColor = { bad: colors.badFg, warn: colors.warnFg, good: colors.goodDot, neutral: colors.accent } as const;
+const toneColor = (colors: Palette) => ({ bad: colors.badFg, warn: colors.warnFg, good: colors.goodDot, neutral: colors.accent }) as const;
 
 /** One notice in the Inbox list. Only priority is emphasised, through the icon tile and a label: there is no read state to show. */
 export function NoticeRow({ notice, last }: { notice: Notice; last?: boolean }) {
-  const priority = priorityInfo(notice.priority);
+  const styles = useStyles(createStyles);
+  const { colors } = useTheme();
+  const t = useT();
+  const locale = useLocale();
+  const priority = priorityInfo(notice.priority, t);
   const category = categoryLabel(notice.category);
-  const when = postedLabel(notice.postedAt);
+  const when = postedLabel(notice.postedAt, new Date(), t, locale);
   const meta = [when, category].filter(Boolean).join(' · ');
   return (
     <Link href={{ pathname: '/(app)/notice', params: { id: String(notice.id) } }} asChild>
@@ -32,7 +37,7 @@ export function NoticeRow({ notice, last }: { notice: Notice; last?: boolean }) 
               <AppText variant="caption" numberOfLines={1} style={{ fontFamily: fonts.medium, fontSize: 13, flexShrink: 1 }}>
                 {meta}
               </AppText>
-              {priority ? <AppText style={[styles.priority, { color: toneColor[priority.tone] }]}>{priority.label}</AppText> : null}
+              {priority ? <AppText style={[styles.priority, { color: toneColor(colors)[priority.tone] }]}>{priority.label}</AppText> : null}
             </View>
             <AppText style={styles.title}>{notice.title}</AppText>
             {notice.content ? (
@@ -48,11 +53,12 @@ export function NoticeRow({ notice, last }: { notice: Notice; last?: boolean }) 
   );
 }
 
-const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 18, paddingVertical: 16, minHeight: 64 },
-  divider: { borderBottomWidth: 1, borderBottomColor: colors.divider },
-  meta: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  priority: { fontFamily: fonts.bold, fontSize: 12 },
-  title: { fontFamily: fonts.semibold, fontSize: 17, lineHeight: 22, marginTop: 4 },
-  preview: { fontSize: 15, lineHeight: 22, marginTop: 2 },
-});
+const createStyles = ({ colors }: Theme) =>
+  StyleSheet.create({
+    row: { flexDirection: 'row', alignItems: 'center', gap: 12, paddingHorizontal: 18, paddingVertical: 16, minHeight: 64 },
+    divider: { borderBottomWidth: 1, borderBottomColor: colors.divider },
+    meta: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    priority: { fontFamily: fonts.bold, fontSize: 12 },
+    title: { fontFamily: fonts.semibold, fontSize: 17, lineHeight: 22, marginTop: 4 },
+    preview: { fontSize: 15, lineHeight: 22, marginTop: 2 },
+  });

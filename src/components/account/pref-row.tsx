@@ -6,7 +6,7 @@ import Animated, { useAnimatedStyle, useReducedMotion, useSharedValue, withTimin
 import { IconBadge } from '@/components/icon-badge';
 import { AppText } from '@/components/ui';
 import { tapHaptic } from '@/motion/haptics';
-import { colors, fonts } from '@/theme';
+import { fonts, useStyles, useTheme, type Theme } from '@/theme';
 
 const DIMMED = 0.55;
 
@@ -26,6 +26,8 @@ export function PrefRow({
   onChange: (next: boolean) => void;
   last?: boolean;
 }) {
+  const styles = useStyles(createStyles);
+  const { colors, isDark } = useTheme();
   const reduced = useReducedMotion();
   const level = useSharedValue(value ? 1 : DIMMED);
 
@@ -35,6 +37,7 @@ export function PrefRow({
   }, [value, reduced, level]);
 
   const dim = useAnimatedStyle(() => ({ opacity: level.get() }));
+  const off = isDark ? '#4A423C' : '#E4DBD3';
 
   return (
     <View style={[styles.row, !last && styles.divider]}>
@@ -56,16 +59,17 @@ export function PrefRow({
           tapHaptic();
           onChange(next);
         }}
-        trackColor={{ false: '#E4DBD3', true: colors.accent }}
+        trackColor={{ false: off, true: colors.accent }}
         thumbColor="#FFFFFF"
-        ios_backgroundColor="#E4DBD3"
+        ios_backgroundColor={off}
       />
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 64, paddingVertical: 12, paddingHorizontal: 18 },
-  copy: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 14 },
-  divider: { borderBottomWidth: 1, borderBottomColor: colors.divider },
-});
+const createStyles = ({ colors }: Theme) =>
+  StyleSheet.create({
+    row: { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 64, paddingVertical: 12, paddingHorizontal: 18 },
+    copy: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 14 },
+    divider: { borderBottomWidth: 1, borderBottomColor: colors.divider },
+  });

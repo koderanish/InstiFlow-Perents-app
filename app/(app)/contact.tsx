@@ -9,21 +9,25 @@ import { IconBadge } from '@/components/icon-badge';
 import { AppText, BackHeader, Screen } from '@/components/ui';
 import { SCHOOL } from '@/config/school';
 import { useSchoolContact } from '@/features/parent/hooks';
+import { useT } from '@/i18n';
 import { contactActions, hasContact, mapsUrl, present, type ContactAction } from '@/lib/contact';
 import { PressableScale } from '@/motion/pressable-scale';
 import { Reveal } from '@/motion/reveal';
-import { colors, fonts } from '@/theme';
+import { fonts, useStyles, useTheme, type Theme } from '@/theme';
 import type { SchoolContact } from '@/types/parent';
 
 const ICONS = { call: 'phone', email: 'mail', website: 'globe' } as const;
 
 function ActionRow({ action, last }: { action: ContactAction; last: boolean }) {
+  const styles = useStyles(createStyles);
+  const { colors } = useTheme();
+  const t = useT();
   return (
     <PressableScale
       accessibilityRole="link"
       accessibilityLabel={`${action.title}, ${action.subtitle}`}
       scaleTo={0.985}
-      onPress={() => void openUrl(action.url)}
+      onPress={() => void openUrl(action.url, t)}
     >
       <View style={[styles.row, !last && styles.divider]}>
         <IconBadge name={ICONS[action.id]} />
@@ -40,8 +44,11 @@ function ActionRow({ action, last }: { action: ContactAction; last: boolean }) {
 }
 
 function ContactBody({ school }: { school: SchoolContact }) {
+  const styles = useStyles(createStyles);
+  const { colors } = useTheme();
+  const t = useT();
   const address = present(school.address);
-  const actions = contactActions(school);
+  const actions = contactActions(school, t);
   return (
     <>
       {address ? (
@@ -50,12 +57,12 @@ function ContactBody({ school }: { school: SchoolContact }) {
             <View style={styles.addressTop}>
               <IconBadge name="map-pin" />
               <AppText variant="caption" style={{ fontFamily: fonts.medium }}>
-                Address
+                {t('account.contact.address')}
               </AppText>
             </View>
             <AppText style={{ fontFamily: fonts.medium, fontSize: 17, lineHeight: 25, marginTop: 12 }}>{address}</AppText>
-            <PressableScale accessibilityRole="link" accessibilityLabel="Open the address in Maps" onPress={() => void openUrl(mapsUrl(address))} style={styles.mapsLink}>
-              <AppText style={{ fontFamily: fonts.semibold, fontSize: 15, color: colors.accentInk }}>Open in Maps</AppText>
+            <PressableScale accessibilityRole="link" accessibilityLabel={t('account.contact.mapsLabel')} onPress={() => void openUrl(mapsUrl(address), t)} style={styles.mapsLink}>
+              <AppText style={{ fontFamily: fonts.semibold, fontSize: 15, color: colors.accentInk }}>{t('account.contact.maps')}</AppText>
             </PressableScale>
           </WashCard>
         </Reveal>
@@ -76,18 +83,19 @@ function ContactBody({ school }: { school: SchoolContact }) {
 }
 
 export default function ContactScreen() {
+  const t = useT();
   const goBack = useGoBack();
   const contact = useSchoolContact();
   return (
     <Screen
-      header={<BackHeader title="Contact the school" subtitle={contact.data?.name ?? SCHOOL.name} onBack={goBack} />}
+      header={<BackHeader title={t('account.contact.title')} subtitle={contact.data?.name ?? SCHOOL.name} onBack={goBack} />}
       refreshing={contact.isRefetching}
       onRefresh={() => void contact.refetch()}
     >
       <QueryBoundary
         query={contact}
         isEmpty={(d) => !hasContact(d)}
-        empty={{ title: 'No contact details yet', message: 'The school has not added a phone number or address. Please ask at the school office.' }}
+        empty={{ title: t('account.contact.emptyTitle'), message: t('account.contact.emptyMessage') }}
       >
         {(data) => <ContactBody school={data} />}
       </QueryBoundary>
@@ -95,9 +103,10 @@ export default function ContactScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 18, paddingVertical: 14, minHeight: 72 },
-  divider: { borderBottomWidth: 1, borderBottomColor: colors.divider },
-  addressTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  mapsLink: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
-});
+const createStyles = ({ colors }: Theme) =>
+  StyleSheet.create({
+    row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 18, paddingVertical: 14, minHeight: 72 },
+    divider: { borderBottomWidth: 1, borderBottomColor: colors.divider },
+    addressTop: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+    mapsLink: { minHeight: 44, justifyContent: 'center', alignSelf: 'flex-start' },
+  });
