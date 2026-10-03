@@ -5,25 +5,31 @@ import { NoticeRow } from '@/components/account/notice-row';
 import { QueryBoundary, useChildPage } from '@/components/account/page-state';
 import { SelectChip } from '@/components/account/select-chip';
 import { ChildChips } from '@/components/child-chips';
-import { AppText, ListCard, Screen } from '@/components/ui';
+import { CollapsingScreen } from '@/components/collapsing-screen';
+import { ListCard } from '@/components/ui';
 import { SCHOOL } from '@/config/school';
 import { useNotices } from '@/features/parent/hooks';
+import { useT } from '@/i18n';
 import { ALL_CATEGORIES, filterNotices, noticeCategories } from '@/lib/notices';
 import { Reveal } from '@/motion/reveal';
 import type { Notice } from '@/types/parent';
 
 function CategoryFilter({ options, value, onChange }: { options: string[]; value: string; onChange: (next: string) => void }) {
+  const t = useT();
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters} style={styles.filterScroll}>
-      {[ALL_CATEGORIES, ...options].map((label) => (
-        <SelectChip
-          key={label}
-          label={label}
-          selected={label === value}
-          accessibilityLabel={label === ALL_CATEGORIES ? 'Show all notices' : `Show ${label} notices`}
-          onPress={() => onChange(label)}
-        />
-      ))}
+      {[ALL_CATEGORIES, ...options].map((key) => {
+        const all = key === ALL_CATEGORIES;
+        return (
+          <SelectChip
+            key={key}
+            label={all ? t('account.inbox.all') : key}
+            selected={key === value}
+            accessibilityLabel={all ? t('account.inbox.showAll') : t('account.inbox.showCategory', { category: key })}
+            onPress={() => onChange(key)}
+          />
+        );
+      })}
     </ScrollView>
   );
 }
@@ -53,33 +59,34 @@ function NoticeList({ notices }: { notices: Notice[] }) {
 }
 
 export default function InboxScreen() {
+  const t = useT();
   const page = useChildPage();
   const notices = useNotices(page.child?.id);
   return (
-    <Screen
+    <CollapsingScreen
+      title={t('tab.inbox')}
+      subtitle={t('account.inbox.from', { school: SCHOOL.name })}
       refreshing={notices.isRefetching}
       onRefresh={() => {
         void page.refetch();
         void notices.refetch();
       }}
     >
-      <Reveal index={0}>
-        <AppText variant="title">Inbox</AppText>
-        <AppText variant="caption" numberOfLines={1} style={{ marginTop: 4 }}>
-          Messages from {SCHOOL.name}
-        </AppText>
-      </Reveal>
       {page.child ? (
         <>
           <ChildChips items={page.all} selectedId={page.child.id} />
-          <QueryBoundary query={notices} isEmpty={(d) => d.length === 0} empty={{ title: 'No messages yet', message: 'Notices from the school will show up here.' }}>
+          <QueryBoundary
+            query={notices}
+            isEmpty={(d) => d.length === 0}
+            empty={{ title: t('account.inbox.emptyTitle'), message: t('account.inbox.emptyMessage') }}
+          >
             {(data) => <NoticeList notices={data} />}
           </QueryBoundary>
         </>
       ) : (
         page.gate
       )}
-    </Screen>
+    </CollapsingScreen>
   );
 }
 

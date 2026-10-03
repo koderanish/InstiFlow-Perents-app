@@ -6,44 +6,54 @@ import { useGoBack } from '@/components/account/nav';
 import { PrefRow } from '@/components/account/pref-row';
 import { InsetList, Tray } from '@/components/account/surfaces';
 import { BackHeader, ListCard, Screen } from '@/components/ui';
+import { useT, type TKey } from '@/i18n';
 import type { PrefKey } from '@/lib/prefs';
 import { Reveal } from '@/motion/reveal';
 import { usePrefsStore } from '@/stores/prefs-store';
 
-type Topic = { key: PrefKey; title: string; subtitle: string; icon: React.ComponentProps<typeof Feather>['name'] };
+type Topic = { key: PrefKey; title: TKey; subtitle: TKey; icon: React.ComponentProps<typeof Feather>['name'] };
 
 const TOPICS: Topic[] = [
-  { key: 'bus', icon: 'truck', title: 'Bus pickup and drop', subtitle: 'When your child gets on or off the bus' },
-  { key: 'attendance', icon: 'check-circle', title: 'Attendance', subtitle: 'If your child is marked absent or late' },
-  { key: 'fees', icon: 'credit-card', title: 'Fees', subtitle: 'Due dates and receipts' },
-  { key: 'notices', icon: 'bell', title: 'Notices', subtitle: 'Messages from the school' },
-  { key: 'homework', icon: 'book-open', title: 'Homework and diary', subtitle: 'When a teacher adds something' },
+  { key: 'bus', icon: 'truck', title: 'account.notifications.bus', subtitle: 'account.notifications.busHint' },
+  { key: 'attendance', icon: 'check-circle', title: 'account.notifications.attendance', subtitle: 'account.notifications.attendanceHint' },
+  { key: 'fees', icon: 'credit-card', title: 'account.notifications.fees', subtitle: 'account.notifications.feesHint' },
+  { key: 'notices', icon: 'bell', title: 'account.notifications.notices', subtitle: 'account.notifications.noticesHint' },
+  { key: 'homework', icon: 'book-open', title: 'account.notifications.homework', subtitle: 'account.notifications.homeworkHint' },
 ];
 
 export default function NotificationSettingsScreen() {
+  const t = useT();
   const goBack = useGoBack();
   const prefs = usePrefsStore((s) => s.notifications);
   const set = usePrefsStore((s) => s.setNotification);
   return (
-    <Screen header={<BackHeader title="Notifications" subtitle="Choose what reaches you" onBack={goBack} />}>
+    <Screen header={<BackHeader title={t('account.notifications.title')} subtitle={t('account.notifications.subtitle')} onBack={goBack} />}>
       <Reveal index={0}>
         <ListCard>
-          {TOPICS.map((t, i) => (
-            <PrefRow key={t.key} icon={t.icon} title={t.title} subtitle={t.subtitle} value={prefs[t.key]} onChange={(v) => set(t.key, v)} last={i === TOPICS.length - 1} />
+          {TOPICS.map((topic, i) => (
+            <PrefRow
+              key={topic.key}
+              icon={topic.icon}
+              title={t(topic.title)}
+              subtitle={t(topic.subtitle)}
+              value={prefs[topic.key]}
+              onChange={(v) => set(topic.key, v)}
+              last={i === TOPICS.length - 1}
+            />
           ))}
         </ListCard>
       </Reveal>
       <Reveal index={1}>
         <Tray>
           <InsetList>
-            <PrefRow icon="moon" title="Quiet hours" subtitle="9 pm to 7 am, except bus alerts" value={prefs.quietHours} onChange={(v) => set('quietHours', v)} last />
+            <PrefRow icon="moon" title={t('account.notifications.quiet')} subtitle={t('account.notifications.quietHint')} value={prefs.quietHours} onChange={(v) => set('quietHours', v)} last />
           </InsetList>
         </Tray>
       </Reveal>
       <Reveal index={2}>
         <View style={{ gap: 8 }}>
-          <Hint>Push notifications will start once the school turns them on. Your choices here are saved on this phone and will apply from then.</Hint>
-          <Hint>When they start, if alerts do not arrive, allow notifications for this app in your phone settings.</Hint>
+          <Hint>{t('account.notifications.hint1')}</Hint>
+          <Hint>{t('account.notifications.hint2')}</Hint>
         </View>
       </Reveal>
     </Screen>

@@ -1,14 +1,18 @@
+import { weekdayName, weekdayShort } from '@/i18n/names';
+import { defaultT, type TFunction } from '@/i18n/translate';
+import type { Locale } from '@/i18n/types';
+
 import { clockFromTime } from './format';
 import type { TimetableSlot } from '@/types/parent';
 
-export const SCHOOL_DAYS = [
-  { index: 0, short: 'Mon', long: 'Monday' },
-  { index: 1, short: 'Tue', long: 'Tuesday' },
-  { index: 2, short: 'Wed', long: 'Wednesday' },
-  { index: 3, short: 'Thu', long: 'Thursday' },
-  { index: 4, short: 'Fri', long: 'Friday' },
-  { index: 5, short: 'Sat', long: 'Saturday' },
-] as const;
+/** Monday-first day indexes as the API sends them. Names come from `schoolDayNames`. */
+export const SCHOOL_DAYS = [{ index: 0 }, { index: 1 }, { index: 2 }, { index: 3 }, { index: 4 }, { index: 5 }] as const;
+
+/** Short and long weekday name for a Monday-first index (0 = Monday), in the chosen language. */
+export const schoolDayNames = (locale: Locale, index: number): { short: string; long: string } => {
+  const sunday0 = (index + 1) % 7;
+  return { short: weekdayShort(locale, sunday0), long: weekdayName(locale, sunday0) };
+};
 
 /** Monday = 0 … Sunday = 6, to match the API. */
 export const weekdayIndex = (now: Date): number => (now.getDay() + 6) % 7;
@@ -48,14 +52,15 @@ export const currentSlotIndex = (daySlots: TimetableSlot[], now: Date): number =
 };
 
 /** "8:30 am to 9:15 am". */
-export const slotTimeRange = (slot: TimetableSlot): string => {
+export const slotTimeRange = (slot: TimetableSlot, t: TFunction = defaultT): string => {
   const start = clockFromTime(slot.start);
   const end = clockFromTime(slot.end);
-  if (start && end) return `${start} to ${end}`;
+  if (start && end) return t('learn.timetable.timeRange', { start, end });
   return start ?? end ?? '';
 };
 
 /** "1" -> "Period 1"; anything else (e.g. "Assembly") is shown as given. */
-export const periodLabel = (period: string): string => (/^\d+$/.test(period.trim()) ? `Period ${period.trim()}` : period.trim());
+export const periodLabel = (period: string, t: TFunction = defaultT): string =>
+  /^\d+$/.test(period.trim()) ? t('learn.timetable.period', { number: period.trim() }) : period.trim();
 
 export const periodCount = (daySlots: TimetableSlot[]): number => daySlots.filter((s) => !s.isBreak).length;

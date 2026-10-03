@@ -5,7 +5,7 @@ import { CountUp } from '@/motion/count-up';
 import { percentToRatio } from '@/motion/motion-math';
 import { ProgressRing } from '@/motion/progress-ring';
 import type { Tone } from '@/lib/status-copy';
-import { colors, fonts } from '@/theme';
+import { fonts, useTheme } from '@/theme';
 
 /**
  * A big percentage drawn as a ring with the number counting up in the middle,
@@ -27,6 +27,7 @@ export function PercentHero({
   size?: number;
   numeralSize?: number;
 }) {
+  const { colors } = useTheme();
   return (
     <View style={styles.row}>
       <ProgressRing ratio={percentToRatio(percent)} size={size} stroke={Math.round(size / 12)}>

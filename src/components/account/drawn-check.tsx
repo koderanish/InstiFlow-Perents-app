@@ -3,7 +3,7 @@ import { View } from 'react-native';
 import Animated, { Easing, useAnimatedProps, useReducedMotion, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import Svg, { Circle, Path } from 'react-native-svg';
 
-import { colors } from '@/theme';
+import { useTheme } from '@/theme';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const AnimatedPath = Animated.createAnimatedComponent(Path);
@@ -17,7 +17,10 @@ const easeOut = Easing.out(Easing.cubic);
  * A success mark that draws itself: the ring first, then the tick. Plays once when it mounts.
  * Pair it with `successHaptic()` at the moment the action succeeds.
  */
-export function DrawnCheck({ size = 72, color = colors.goodFg, background = colors.goodBg }: { size?: number; color?: string; background?: string }) {
+export function DrawnCheck({ size = 72, color, background }: { size?: number; color?: string; background?: string }) {
+  const { colors } = useTheme();
+  const stroke = color ?? colors.goodFg;
+  const fill = background ?? colors.goodBg;
   const reduced = useReducedMotion();
   const ring = useSharedValue(reduced ? 1 : 0);
   const tick = useSharedValue(reduced ? 1 : 0);
@@ -34,12 +37,12 @@ export function DrawnCheck({ size = 72, color = colors.goodFg, background = colo
   return (
     <View accessibilityElementsHidden importantForAccessibility="no" style={{ width: size, height: size }}>
       <Svg width={size} height={size} viewBox="0 0 72 72">
-        <Circle cx={36} cy={36} r={RADIUS} fill={background} />
+        <Circle cx={36} cy={36} r={RADIUS} fill={fill} />
         <AnimatedCircle
           cx={36}
           cy={36}
           r={RADIUS}
-          stroke={color}
+          stroke={stroke}
           strokeWidth={3}
           strokeLinecap="round"
           fill="none"
@@ -50,7 +53,7 @@ export function DrawnCheck({ size = 72, color = colors.goodFg, background = colo
         />
         <AnimatedPath
           d="M23 37 L32 46 L49 27"
-          stroke={color}
+          stroke={stroke}
           strokeWidth={4}
           strokeLinecap="round"
           strokeLinejoin="round"

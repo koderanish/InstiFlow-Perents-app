@@ -1,12 +1,13 @@
 import { ApiError } from '@/api/client';
+import { defaultT, type TFunction } from '@/i18n/translate';
 
 /** Parent-friendly text for a failed request. Raw backend messages are never shown. */
-export const friendlyError = (error: unknown): string => {
+export const friendlyError = (error: unknown, t: TFunction = defaultT): string => {
   if (error instanceof ApiError) {
-    if (error.isNetworkError || error.isTimeout) return 'Check your internet connection and try again.';
-    if (error.status === 404) return 'We could not find this. Please contact the school office.';
+    if (error.isNetworkError || error.isTimeout) return t('error.network');
+    if (error.status === 404) return t('error.notFound');
   }
-  return 'Something went wrong on our side. Please try again in a moment.';
+  return t('error.generic');
 };
 
 /** True when the request failed because the phone could not reach the school's server. */

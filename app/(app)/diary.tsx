@@ -1,19 +1,23 @@
-import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { ChildGate } from '@/components/child-gate';
+import { CollapsingScreen } from '@/components/collapsing-screen';
+import { BackButton } from '@/components/learn/back-button';
 import { usePullRefresh } from '@/components/learn/hooks';
-import { AppText, BackHeader, Card, EmptyState, ErrorState, Loading, Screen } from '@/components/ui';
+import { AppText, Card, EmptyState, ErrorState, Loading } from '@/components/ui';
 import { useDiary } from '@/features/parent/hooks';
+import { useT } from '@/i18n';
 import { friendlyError } from '@/lib/errors';
 import { AnimatedBar } from '@/motion/animated-bar';
 import { progressFraction } from '@/motion/motion-math';
 import { Reveal } from '@/motion/reveal';
 import { staggerDelay } from '@/motion/tokens';
-import { colors, fonts } from '@/theme';
+import { fonts, useTheme } from '@/theme';
 import type { DiaryEntry } from '@/types/parent';
 
 function DiaryCard({ entry, index }: { entry: DiaryEntry; index: number }) {
+  const t = useT();
+  const { colors } = useTheme();
   const covered = progressFraction(entry.progress);
   const heading = [entry.chapterTitle, entry.topic].filter(Boolean).join(', ');
   return (
@@ -36,7 +40,7 @@ function DiaryCard({ entry, index }: { entry: DiaryEntry; index: number }) {
           </AppText>
         ) : null}
         {covered > 0 ? (
-          <View accessible accessibilityLabel={`${Math.round(covered * 100)} percent covered`} style={styles.progress}>
+          <View accessible accessibilityLabel={t('learn.diary.coveredSpoken', { percent: Math.round(covered * 100) })} style={styles.progress}>
             <AnimatedBar ratio={covered} delay={260 + staggerDelay(index)} style={{ flex: 1 }} />
             <AppText variant="caption" tabular style={{ fontSize: 13, minWidth: 40, textAlign: 'right' }}>
               {`${Math.round(covered * 100)}%`}
@@ -50,10 +54,11 @@ function DiaryCard({ entry, index }: { entry: DiaryEntry; index: number }) {
 
 function DiaryBody({ childId }: { childId: number }) {
   const q = useDiary(childId);
+  const t = useT();
   if (q.isLoading) return <Loading />;
   if (q.isError || !q.data) return <ErrorState message={friendlyError(q.error)} onRetry={() => void q.refetch()} />;
   if (q.data.entries.length === 0) {
-    return <EmptyState title="Nothing yet" message="The teachers have not added today's class notes. Check again later." icon="book" />;
+    return <EmptyState title={t('learn.diary.empty')} message={t('learn.diary.emptyMessage')} icon="book" />;
   }
   return (
     <View style={{ gap: 12 }}>
@@ -65,12 +70,12 @@ function DiaryBody({ childId }: { childId: number }) {
 }
 
 export default function DiaryScreen() {
-  const router = useRouter();
+  const t = useT();
   const refresh = usePullRefresh();
   return (
-    <Screen {...refresh} header={<BackHeader title="Today in class" onBack={() => router.back()} />}>
+    <CollapsingScreen {...refresh} title={t('diary.title')} leading={<BackButton />}>
       <ChildGate>{(child) => <DiaryBody childId={child.id} />}</ChildGate>
-    </Screen>
+    </CollapsingScreen>
   );
 }
 

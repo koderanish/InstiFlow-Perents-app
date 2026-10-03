@@ -3,7 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import Animated, { Easing, useAnimatedProps, useReducedMotion, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import Svg, { Circle } from 'react-native-svg';
 
-import { colors } from '@/theme';
+import { useTheme } from '@/theme';
 
 import { clamp01, ringGeometry } from './motion-math';
 
@@ -28,12 +28,13 @@ export function ProgressRing({
   ratio,
   size = 120,
   stroke = 10,
-  color = colors.accent,
-  trackColor = colors.divider,
+  color,
+  trackColor,
   delay = 120,
   duration = 900,
   children,
 }: ProgressRingProps) {
+  const { colors } = useTheme();
   const reduced = useReducedMotion();
   const target = clamp01(ratio);
   const { radius, center, circumference } = ringGeometry(size, stroke);
@@ -56,12 +57,12 @@ export function ProgressRing({
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
       <Svg width={size} height={size} style={[StyleSheet.absoluteFill, { transform: [{ rotate: '-90deg' }] }]}>
-        <Circle cx={center} cy={center} r={radius} stroke={trackColor} strokeWidth={stroke} fill="none" />
+        <Circle cx={center} cy={center} r={radius} stroke={trackColor ?? colors.divider} strokeWidth={stroke} fill="none" />
         <AnimatedCircle
           cx={center}
           cy={center}
           r={radius}
-          stroke={color}
+          stroke={color ?? colors.accent}
           strokeWidth={stroke}
           strokeLinecap="round"
           strokeDasharray={`${circumference} ${circumference}`}
