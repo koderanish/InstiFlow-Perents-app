@@ -1,12 +1,12 @@
 import Constants from 'expo-constants';
 import * as Device from 'expo-device';
-import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 
 import { parentApi } from '@/api/services';
 import { useBrandingStore } from '@/branding';
 import { usePrefsStore } from '@/stores/prefs-store';
 
+import { loadNotifications, nativePushAvailable } from './native';
 import { usePushStore } from './push-store';
 import { buildRegisterPayload, isExpoPushToken, permissionFrom, type PushPermission } from './rules';
 
@@ -18,11 +18,18 @@ const PREFS_DEBOUNCE_MS = 800;
 const LOGOUT_WAIT_MS = 4000;
 
 /** Push needs a real phone (and not the web). Simulators and browsers get a quiet note instead. */
-export const pushSupported = (): boolean => Platform.OS !== 'web' && Device.isDevice;
+export const pushSupported = (): boolean => nativePushAvailable() && Device.isDevice;
+
+const notifications = () => {
+  const module = loadNotifications();
+  if (!module) throw new Error('Push notifications are not available in this app');
+  return module;
+};
 
 /** Shows a banner and plays the sound when a notification arrives while the app is open. */
 export function configureForegroundNotifications(): void {
-  if (Platform.OS === 'web') return;
+  const Notifications = loadNotifications();
+  if (!Notifications) return;
   Notifications.setNotificationHandler({
     handleNotification: async () => ({
       shouldShowBanner: true,
@@ -35,6 +42,7 @@ export function configureForegroundNotifications(): void {
 
 async function ensureAndroidChannel(): Promise<void> {
   if (Platform.OS !== 'android') return;
+  const Notifications = notifications();
   const { name, accent } = useBrandingStore.getState().branding;
   await Notifications.setNotificationChannelAsync(CHANNEL_ID, {
     name,
@@ -45,7 +53,7 @@ async function ensureAndroidChannel(): Promise<void> {
 }
 
 const readPermission = async (): Promise<{ permission: PushPermission; canAskAgain: boolean }> => {
-  const result = await Notifications.getPermissionsAsync();
+  const result = await notifications().getPermissionsAsync();
   return { permission: permissionFrom(result), canAskAgain: result.canAskAgain };
 };
 
@@ -66,7 +74,7 @@ async function fetchToken(): Promise<TokenOutcome> {
   const id = projectId();
   if (!id) return { problem: 'setup' };
   try {
-    const { data } = await Notifications.getExpoPushTokenAsync({ projectId: id });
+    const { data } = await notifications().getExpoPushTokenAsync({ projectId: id });
     return isExpoPushToken(data) ? { token: data } : { problem: 'failed' };
   } catch {
     return { problem: 'failed' };
@@ -101,7 +109,7 @@ async function register(askUser: boolean): Promise<PushResult> {
     const current = await readPermission();
     let permission = current.permission;
     if (permission !== 'granted' && askUser && current.canAskAgain) {
-      permission = permissionFrom(await Notifications.requestPermissionsAsync());
+      permission = permissionFrom(await notifications().requestPermissionsAsync());
     }
     if (permission !== 'granted') {
       usePushStore.getState().set({ permission, token: null, registered: false });

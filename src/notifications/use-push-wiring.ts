@@ -1,12 +1,12 @@
-import * as Notifications from 'expo-notifications';
+import type { NotificationResponse } from 'expo-notifications';
 import { useRouter, type Href } from 'expo-router';
 import { useEffect } from 'react';
-import { Platform } from 'react-native';
 
 import { queryClient } from '@/providers/query-provider';
 import { useChildStore } from '@/stores/child-store';
 import { usePrefsStore } from '@/stores/prefs-store';
 
+import { loadNotifications } from './native';
 import { parsePushData, shouldRefresh } from './rules';
 import { configureForegroundNotifications, refreshPushIfAllowed, schedulePrefsSync } from './service';
 
@@ -18,8 +18,9 @@ const COLD_START_DELAY_MS = 600;
 
 type Router = ReturnType<typeof useRouter>;
 
-function openFromNotification(response: Notifications.NotificationResponse, router: Router): void {
-  if (response.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) return;
+function openFromNotification(response: NotificationResponse, router: Router): void {
+  const Notifications = loadNotifications();
+  if (!Notifications || response.actionIdentifier !== Notifications.DEFAULT_ACTION_IDENTIFIER) return;
   const id = response.notification.request.identifier;
   if (handled.has(id)) return;
   handled.add(id);
@@ -57,7 +58,8 @@ export function usePushWiring(signedIn: boolean): void {
 
   // Tapping a notification opens its screen (only if it is on the allowed list) and refreshes the data behind it.
   useEffect(() => {
-    if (!signedIn || Platform.OS === 'web') return undefined;
+    const Notifications = loadNotifications();
+    if (!signedIn || !Notifications) return undefined;
     const last = Notifications.getLastNotificationResponse();
     const timer = last ? setTimeout(() => openFromNotification(last, router), COLD_START_DELAY_MS) : null;
     const subscription = Notifications.addNotificationResponseReceivedListener((response) => openFromNotification(response, router));
