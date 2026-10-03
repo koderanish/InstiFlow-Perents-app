@@ -13,6 +13,12 @@ const APP_ENV = (process.env.EXPO_PUBLIC_APP_ENV ?? 'development') as
   | 'staging'
   | 'production';
 
+/**
+ * Google Maps key for the live bus map on Android builds. Optional: without it the app still builds and
+ * the map screen shows its text-only fallback on Android. Expo Go and iOS (Apple Maps) need no key.
+ */
+const GOOGLE_MAPS_API_KEY = process.env.GOOGLE_MAPS_API_KEY?.trim() || undefined;
+
 const config: ExpoConfig = {
   name: school.name,
   slug: school.slug,
@@ -34,6 +40,7 @@ const config: ExpoConfig = {
       monochromeImage: './assets/images/android-icon-monochrome.png',
     },
     predictiveBackGestureEnabled: false,
+    ...(GOOGLE_MAPS_API_KEY ? { config: { googleMaps: { apiKey: GOOGLE_MAPS_API_KEY } } } : {}),
   },
   plugins: [
     'expo-router',
@@ -60,6 +67,7 @@ const config: ExpoConfig = {
   },
   extra: {
     appEnv: APP_ENV,
+    googleMapsConfigured: GOOGLE_MAPS_API_KEY !== undefined,
   },
 };
 

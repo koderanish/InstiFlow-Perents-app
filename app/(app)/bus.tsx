@@ -9,6 +9,7 @@ import { BackButton } from '@/components/learn/back-button';
 import { useNow, usePullRefresh } from '@/components/learn/hooks';
 import { HeroSurface, PulseDot } from '@/components/learn/learn-parts';
 import { AppText, Card, Chip, EmptyState, ErrorState, Loading } from '@/components/ui';
+import { TrackLiveCard } from '@/features/bus-map/track-live-card';
 import { useBus } from '@/features/parent/hooks';
 import { useT, type TFunction } from '@/i18n';
 import { buildTimeline, busEta, fillLength, lineLength, type BusEta, type StopState } from '@/lib/bus-timeline';
@@ -272,6 +273,12 @@ function BusBody({ childId, childName }: { childId: number; childName: string })
       <Reveal index={1}>
         <RouteSummary route={bus.route} stopCount={bus.stops.length} />
       </Reveal>
+
+      {bus.status.leg !== 'dropped_off' ? (
+        <Reveal index={2}>
+          <TrackLiveCard />
+        </Reveal>
+      ) : null}
 
       {bus.stops.length > 0 ? (
         <View>
