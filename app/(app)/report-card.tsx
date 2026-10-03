@@ -11,9 +11,9 @@ import { PercentHero } from '@/components/learn/percent-hero';
 import { AppText, Card, EmptyState, ErrorState, ListCard, Loading, PrimaryButton } from '@/components/ui';
 import { useSchool } from '@/branding';
 import { useChildren, useResults } from '@/features/parent/hooks';
-import { useT } from '@/i18n';
+import { useLocale, useT } from '@/i18n';
 import { friendlyError } from '@/lib/errors';
-import { firstName } from '@/lib/format';
+import { dayMonth, firstName } from '@/lib/format';
 import { formatMarks, marksSummary, reportCardText, resultBadge, resultPercent } from '@/lib/results';
 import { successHaptic } from '@/motion/haptics';
 import { CountUp } from '@/motion/count-up';
@@ -25,10 +25,14 @@ import type { ExamResult, ParentChild, SubjectResult } from '@/types/parent';
 const marksOutOf = (marks: number | null, max: number | null): string =>
   marks === null ? '—' : max !== null ? `${formatMarks(marks)} / ${formatMarks(max)}` : formatMarks(marks);
 
-function SubjectRow({ subject, index }: { subject: SubjectResult; index: number }) {
+function SubjectRow({ subject, index, showDate }: { subject: SubjectResult; index: number; showDate: boolean }) {
   const t = useT();
+  const locale = useLocale();
+  // Two papers of one subject get their date so they do not look like a duplicate.
+  const paperDate = showDate ? dayMonth(subject.date, locale) : null;
   const styles = useStyles(createStyles);
-  const marksText = `${subject.name}, ${marksOutOf(subject.marks, subject.maxMarks)}`;
+  const label = paperDate ? `${subject.name} · ${paperDate}` : subject.name;
+  const marksText = `${label}, ${marksOutOf(subject.marks, subject.maxMarks)}`;
   const spoken = subject.grade ? t('learn.reportCard.spokenGrade', { text: marksText, grade: subject.grade }) : marksText;
   return (
     <Animated.View entering={enterRise(index)} accessible accessibilityLabel={spoken} style={[styles.row, styles.rowDivider]}>
@@ -36,6 +40,11 @@ function SubjectRow({ subject, index }: { subject: SubjectResult; index: number 
         <AppText numberOfLines={1} ellipsizeMode="tail" style={{ fontFamily: fonts.semibold, fontSize: 16 }}>
           {subject.name}
         </AppText>
+        {paperDate ? (
+          <AppText variant="caption" style={{ fontSize: 13, marginTop: 2 }}>
+            {paperDate}
+          </AppText>
+        ) : null}
         {subject.remarks ? (
           <AppText variant="caption" style={{ fontSize: 13, marginTop: 2 }}>
             {subject.remarks}
@@ -123,7 +132,7 @@ function ReportCard({ child, result }: { child: ParentChild; result: ExamResult 
               </AppText>
             </View>
             {result.subjects.map((s, i) => (
-              <SubjectRow key={`${s.name}-${i}`} subject={s} index={i + 2} />
+              <SubjectRow key={`${s.name}-${i}`} subject={s} index={i + 2} showDate={result.subjects.filter((o) => o.name === s.name).length > 1} />
             ))}
             <Animated.View
               entering={enterRise(rows + 2)}

@@ -184,6 +184,8 @@ export interface ExamsData {
 
 export interface SubjectResult {
   name: string;
+  /** Paper date (YYYY-MM-DD). Tells two papers of one subject apart. Absent on older servers. */
+  date?: string | null;
   marks: number | null;
   maxMarks: number | null;
   grade: string | null;
