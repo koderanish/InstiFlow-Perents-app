@@ -24,7 +24,7 @@ export function QuickLinks() {
       <View style={styles.grid}>
         {LINKS.map((l) => (
           <Link key={l.label} href={l.href} asChild>
-            <Pressable accessibilityRole="button" accessibilityLabel={`${l.label}. ${l.hint}`} style={({ pressed }) => [styles.tile, pressed && { opacity: 0.85 }]}>
+            <Pressable accessibilityRole="button" accessibilityLabel={`${l.label}. ${l.hint}`} style={styles.tile}>
               <View style={styles.icon}>
                 <Feather name={l.icon} size={20} color={colors.accentInk} />
               </View>

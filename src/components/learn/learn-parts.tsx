@@ -118,7 +118,7 @@ export function LearnStatBar({
 export function LearnStatTile({ value, label, href }: { value: string; label: string; href: Href }) {
   return (
     <Link href={href} asChild>
-      <Pressable accessibilityRole="button" accessibilityLabel={`${label}: ${value}`} style={[styles.tile, shadow.card]}>
+      <Pressable accessibilityRole="button" accessibilityLabel={`${label}: ${value}`} style={StyleSheet.flatten([styles.tile, shadow.card])}>
         <AppText style={{ fontFamily: fonts.semibold, fontSize: 20, letterSpacing: -0.2 }}>{value}</AppText>
         <AppText variant="caption" style={{ marginTop: 2 }}>
           {label}
