@@ -33,5 +33,7 @@ export const chat = {
   'chat.counter_one': '{count} character left',
   'chat.counter_other': '{count} characters left',
   'chat.stale': 'Could not check for new messages. Trying again soon.',
+  'chat.unreadBadge_one': '{count} unread message',
+  'chat.unreadBadge_other': '{count} unread messages',
   'chat.loading': 'Loading messages',
 } as const;

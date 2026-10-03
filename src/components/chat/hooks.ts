@@ -14,6 +14,7 @@ import {
   type MessagesData,
   type PendingMessage,
 } from '@/lib/messages';
+import { useChildren } from '@/features/parent/hooks';
 import { errorHaptic } from '@/motion/haptics';
 
 /** Under the `parent` prefix so pull-to-refresh elsewhere also refreshes the chat. */
@@ -72,6 +73,8 @@ function useMarkRead(focused: boolean, unreadCount: number) {
 export function useChatThread() {
   const queryClient = useQueryClient();
   const focused = useScreenFocused();
+  // The backend accepts an optional studentId so the school knows which child a message is about.
+  const studentId = useChildren().child?.id;
   const query = useMessagesQuery(focused);
   const [pending, setPending] = useState<PendingMessage[]>([]);
   /** Ids on screen when the conversation first loaded. Only bubbles outside this set animate in. */
@@ -88,7 +91,7 @@ export function useChatThread() {
   const submit = useCallback(
     async (localId: string, body: string) => {
       try {
-        const created = await apiClient.post<ChatMessage>('/parent/messages', { body });
+        const created = await apiClient.post<ChatMessage>('/parent/messages', studentId === undefined ? { body } : { body, studentId });
         queryClient.setQueryData<MessagesData>(messagesKey, (old) => appendMessage(old, created));
         setBaseline((prev) => (prev ? new Set(prev).add(created.id) : prev));
         setPending((list) => list.filter((p) => p.localId !== localId));
@@ -97,7 +100,7 @@ export function useChatThread() {
         setPending((list) => list.map((p) => (p.localId === localId ? { ...p, status: 'failed' } : p)));
       }
     },
-    [queryClient],
+    [queryClient, studentId],
   );
 
   /** Returns true when the text was accepted, so the composer knows to clear. */

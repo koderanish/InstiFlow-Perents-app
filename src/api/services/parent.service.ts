@@ -39,6 +39,7 @@ export function createParentService(client: ApiClient) {
     applyLeave: (id: number, input: LeaveInput) => client.post<LeaveNote>(`${child(id)}/leave`, input),
     invoice: (id: number, invoiceId: number) => client.get<InvoiceDetail>(`${child(id)}/invoices/${invoiceId}`),
     profile: (id: number) => client.get<ChildProfile>(`${child(id)}/profile`),
+    events: (studentId?: number) => client.get<unknown>('/parent/events', { studentId }),
     school: () => client.get<SchoolContact>('/parent/school'),
     registerPushToken: (body: RegisterPayload) => client.post<{ registered: boolean }>('/parent/push-token', body),
     removePushToken: (token: string) => client.delete<{ removed: boolean }>('/parent/push-token', { body: { token } }),
