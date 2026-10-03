@@ -21,6 +21,7 @@ import { AppProviders, queryClient } from '@/providers/query-provider';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePrefsStore } from '@/stores/prefs-store';
 import { I18nProvider } from '@/i18n';
+import { usePushWiring } from '@/notifications/use-push-wiring';
 import { ThemeProvider, useTheme } from '@/theme';
 
 void SplashScreen.preventAutoHideAsync();
@@ -89,6 +90,8 @@ function RootShell() {
   }, [refreshBranding]);
 
   const ready = fontsLoaded && prefsReady && brandingReady && (status === 'authenticated' || status === 'unauthenticated');
+
+  usePushWiring(ready && status === 'authenticated' && tipsSeen);
 
   // The native splash only covers the first moments. Once fonts are in, our own
   // branded splash takes over until the saved sign-in has been checked.

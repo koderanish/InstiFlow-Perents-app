@@ -17,6 +17,7 @@ import type {
   ParentDashboard,
   TodayData,
 } from '@/types/parent';
+import type { RegisterPayload } from '@/notifications/rules';
 import type { ApiClient } from '../client';
 
 export function createParentService(client: ApiClient) {
@@ -39,5 +40,7 @@ export function createParentService(client: ApiClient) {
     invoice: (id: number, invoiceId: number) => client.get<InvoiceDetail>(`${child(id)}/invoices/${invoiceId}`),
     profile: (id: number) => client.get<ChildProfile>(`${child(id)}/profile`),
     school: () => client.get<SchoolContact>('/parent/school'),
+    registerPushToken: (body: RegisterPayload) => client.post<{ registered: boolean }>('/parent/push-token', body),
+    removePushToken: (token: string) => client.delete<{ removed: boolean }>('/parent/push-token', { body: { token } }),
   };
 }
