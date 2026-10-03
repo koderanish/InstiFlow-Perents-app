@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef } from 'react';
 import { parentApi } from '@/api/services';
 import { SCHOOL } from '@/config/school';
 import type { LeaveInput } from '@/types/parent';
+import { parseBusAlerts } from '@/lib/bus-alerts';
 import { parseBusLive, pollInterval, withResolvedHeading, type BusLive } from '@/lib/bus-live';
 import { parseEvents } from '@/lib/events';
 import { childrenForSchool, pickChild } from '@/lib/children';
@@ -14,6 +15,7 @@ export const queryKeys = {
   today: (id: number) => ['parent', id, 'today'] as const,
   attendance: (id: number, month: string | undefined) => ['parent', id, 'attendance', month ?? 'current'] as const,
   bus: (id: number) => ['parent', id, 'bus'] as const,
+  busAlerts: (id: number) => ['parent', id, 'bus-alerts'] as const,
   busLocation: (id: number) => ['parent', id, 'bus-location'] as const,
   fees: (id: number) => ['parent', id, 'fees'] as const,
   notices: (id: number) => ['parent', id, 'notices'] as const,
@@ -52,6 +54,13 @@ export const useAttendance = (id: number | undefined, month?: string) =>
 
 export const useBus = (id: number | undefined) =>
   useQuery({ queryKey: queryKeys.bus(id ?? 0), queryFn: () => parentApi.bus(id as number), enabled: enabled(id) });
+
+export const useBusAlerts = (id: number | undefined) =>
+  useQuery({
+    queryKey: queryKeys.busAlerts(id ?? 0),
+    queryFn: async () => parseBusAlerts(await parentApi.busAlerts(id as number)),
+    enabled: enabled(id),
+  });
 
 /**
  * Live bus position from the driver app. Polls every 10 s while the bus is live (30 s otherwise) and only

@@ -99,7 +99,7 @@ export function refreshScopes(type: string | null): readonly string[] {
     case 'attendance':
       return ['attendance', 'today', 'dashboard'];
     case 'bus':
-      return ['bus', 'today'];
+      return ['bus', 'bus-alerts', 'today'];
     case 'fees':
     case 'fee':
       return ['fees', 'invoice', 'today', 'dashboard'];

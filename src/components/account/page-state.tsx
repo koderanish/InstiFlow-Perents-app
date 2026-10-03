@@ -6,7 +6,7 @@ import Animated from 'react-native-reanimated';
 import { useErrorText, useIsOffline } from '@/components/account/error-text';
 import { AppText, EmptyState, ErrorState } from '@/components/ui';
 import { useChildren } from '@/features/parent/hooks';
-import { useT } from '@/i18n';
+import { useLocale, useT } from '@/i18n';
 import { isOffline } from '@/lib/errors';
 import { clock } from '@/lib/format';
 import { enterRise, exitFade } from '@/motion/presets';
@@ -35,8 +35,9 @@ export function SkeletonCards({ rows = 3 }: { rows?: number }) {
 export function StaleBanner({ error, savedAt }: { error: unknown; savedAt: number }) {
   const styles = useStyles(createStyles);
   const t = useT();
+  const locale = useLocale();
   const phoneOffline = useIsOffline();
-  const when = savedAt > 0 ? clock(new Date(savedAt).toISOString()) : null;
+  const when = savedAt > 0 ? clock(new Date(savedAt).toISOString(), locale) : null;
   const offline = phoneOffline || isOffline(error);
   const text = offline
     ? when

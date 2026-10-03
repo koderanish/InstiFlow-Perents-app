@@ -28,6 +28,7 @@ export function createParentService(client: ApiClient) {
     attendance: (id: number, month?: string) =>
       client.get<AttendanceMonth>(`${child(id)}/attendance`, { month }),
     bus: (id: number) => client.get<BusDetails>(`${child(id)}/bus`),
+    busAlerts: (id: number) => client.get<unknown>(`${child(id)}/bus-alerts`),
     busLocation: (id: number) => client.get<unknown>(`${child(id)}/bus-location`),
     fees: (id: number) => client.get<FeesData>(`${child(id)}/fees`),
     notices: (id: number, limit = 20) => client.get<Notice[]>(`${child(id)}/notices`, { limit }),

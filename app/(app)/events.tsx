@@ -17,9 +17,9 @@ import { PressableScale } from '@/motion/pressable-scale';
 import { Reveal } from '@/motion/reveal';
 import { fonts, useStyles, useTheme, type Theme } from '@/theme';
 
-const timeLine = (e: SchoolEvent, t: TFunction): string | null => {
-  const start = clockFromTime(e.startTime);
-  const end = clockFromTime(e.endTime);
+const timeLine = (e: SchoolEvent, t: TFunction, locale: Locale): string | null => {
+  const start = clockFromTime(e.startTime, locale);
+  const end = clockFromTime(e.endTime, locale);
   if (start && end) return t('events.timeRange', { start, end });
   if (start) return t('events.timeFrom', { start });
   if (end) return t('events.timeUntil', { end });
@@ -35,7 +35,7 @@ function EventRow({ event, past, last }: { event: SchoolEvent; past: boolean; la
   const styles = useStyles(createStyles);
   const { colors } = useTheme();
   const parts = shortDateParts(event.date, locale);
-  const time = timeLine(event, t);
+  const time = timeLine(event, t, locale);
   const spoken = t('events.cardLabel', {
     title: event.title,
     when: dayMonth(event.date, locale) ?? event.date,

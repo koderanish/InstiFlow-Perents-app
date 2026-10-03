@@ -74,7 +74,7 @@ export const nextPaperHeadline = (next: NextPaper, t: TFunction = defaultT): str
 /** "9 October, 9:00 am". */
 export const paperWhen = (paper: ExamPaper, locale: Locale = 'en'): string => {
   const day = dayMonth(paper.date, locale) ?? paper.date;
-  const time = clockFromTime(paper.startTime);
+  const time = clockFromTime(paper.startTime, locale);
   return time ? `${day}, ${time}` : day;
 };
 
@@ -84,8 +84,8 @@ const minutesOf = (time: string | null): number | null => {
 };
 
 /** "9:00 am, 45 min" or just the start time; null when no time is set. */
-export const paperTimeLine = (paper: ExamPaper, t: TFunction = defaultT): string | null => {
-  const start = clockFromTime(paper.startTime);
+export const paperTimeLine = (paper: ExamPaper, t: TFunction = defaultT, locale: Locale = 'en'): string | null => {
+  const start = clockFromTime(paper.startTime, locale);
   if (!start) return null;
   const from = minutesOf(paper.startTime);
   const to = minutesOf(paper.endTime);

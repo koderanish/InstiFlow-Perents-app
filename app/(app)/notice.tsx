@@ -17,7 +17,7 @@ import type { Notice } from '@/types/parent';
 
 const postedLine = (iso: string, t: TFunction, locale: Locale): string => {
   const info = postedInfo(iso);
-  const time = clock(iso);
+  const time = clock(iso, locale);
   if (!info) return t('account.notice.posted');
   if (info.kind === 'date') {
     const date = `${info.day} ${monthName(locale, info.month)}`;

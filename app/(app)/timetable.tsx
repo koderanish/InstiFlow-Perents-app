@@ -23,10 +23,11 @@ import type { ParentChild, TimetableSlot } from '@/types/parent';
 /** Breaks stay quiet: no card, just a label between two hairlines. */
 function BreakRow({ slot, now: isNow, index }: { slot: TimetableSlot; now: boolean; index: number }) {
   const t = useT();
+  const locale = useLocale();
   const styles = useStyles(createStyles);
   const { colors } = useTheme();
   const label = slot.subject?.trim() || periodLabel(slot.period, t) || t('learn.timetable.break');
-  const range = slotTimeRange(slot, t);
+  const range = slotTimeRange(slot, t, locale);
   return (
     <Animated.View entering={enterFade(index)} accessible accessibilityLabel={`${label}, ${range}${isNow ? `, ${t('learn.timetable.nowSpoken')}` : ''}`} style={styles.breakRow}>
       <View style={styles.breakLine} />
@@ -46,10 +47,11 @@ function BreakRow({ slot, now: isNow, index }: { slot: TimetableSlot; now: boole
 
 function PeriodCard({ slot, now: isNow, index }: { slot: TimetableSlot; now: boolean; index: number }) {
   const t = useT();
+  const locale = useLocale();
   const styles = useStyles(createStyles);
   const { colors } = useTheme();
   const subject = slot.subject?.trim() || t('learn.timetable.freePeriod');
-  const range = slotTimeRange(slot, t);
+  const range = slotTimeRange(slot, t, locale);
   const spoken = [periodLabel(slot.period, t), subject, slot.teacher, range, isNow ? t('learn.timetable.nowSpoken') : null].filter(Boolean).join(', ');
   return (
     <Animated.View entering={enterRise(index)} accessible accessibilityLabel={spoken} style={[styles.period, isNow && styles.periodNow]}>

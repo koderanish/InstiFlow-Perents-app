@@ -90,6 +90,9 @@ describe('shouldRefresh', () => {
     expect(shouldRefresh(['parent', 3, 'fees'], 'fees')).toBe(true);
     expect(shouldRefresh(['parent', 3, 'attendance', 'current'], 'fees')).toBe(false);
     expect(shouldRefresh(['parent', 'messages'], 'message')).toBe(true);
+    expect(shouldRefresh(['parent', 3, 'bus-alerts'], 'bus')).toBe(true);
+    expect(shouldRefresh(['parent', 3, 'bus'], 'bus')).toBe(true);
+    expect(shouldRefresh(['parent', 3, 'bus-alerts'], 'fees')).toBe(false);
   });
 
   it('refreshes everything under parent for an unknown type, and nothing else', () => {

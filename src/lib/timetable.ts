@@ -52,9 +52,9 @@ export const currentSlotIndex = (daySlots: TimetableSlot[], now: Date): number =
 };
 
 /** "8:30 am to 9:15 am". */
-export const slotTimeRange = (slot: TimetableSlot, t: TFunction = defaultT): string => {
-  const start = clockFromTime(slot.start);
-  const end = clockFromTime(slot.end);
+export const slotTimeRange = (slot: TimetableSlot, t: TFunction = defaultT, locale: Locale = 'en'): string => {
+  const start = clockFromTime(slot.start, locale);
+  const end = clockFromTime(slot.end, locale);
   if (start && end) return t('learn.timetable.timeRange', { start, end });
   return start ?? end ?? '';
 };

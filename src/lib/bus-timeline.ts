@@ -1,3 +1,4 @@
+import type { Locale } from '@/i18n/types';
 import type { BusLeg } from '@/types/parent';
 
 import { clockFromTime } from './format';
@@ -63,11 +64,12 @@ export const busEta = (
   route: { arrivalTime: string | null },
   leg: BusLeg,
   now: Date,
+  locale: Locale = 'en',
 ): BusEta | null => {
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   if (leg === 'not_started') {
     const stop = stops.find((s) => s.isChildStop);
-    const time = clockFromTime(stop?.time);
+    const time = clockFromTime(stop?.time, locale);
     const planned = minutesOf(stop?.time);
     if (!stop || !time || planned === null) return null;
     const away = planned - nowMinutes;
@@ -77,7 +79,7 @@ export const busEta = (
     return { kind: 'pickupAt', stop: stop.name, time };
   }
   if (leg === 'on_the_bus') {
-    const time = clockFromTime(route.arrivalTime);
+    const time = clockFromTime(route.arrivalTime, locale);
     const planned = minutesOf(route.arrivalTime);
     if (!time || planned === null) return null;
     const away = planned - nowMinutes;
