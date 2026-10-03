@@ -1,4 +1,4 @@
-import { lightPalette, makeShadows, mix } from './palette';
+import { lightPalette, makeShadows } from './palette';
 
 export { darkPalette, lightPalette, makeShadows, mix } from './palette';
 export type { Palette, Shadows } from './palette';
