@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from 'react-native';
+import Animated, { Easing, FadeIn, Keyframe, ReduceMotion } from 'react-native-reanimated';
 
 import { SCHOOL } from '@/config/school';
 import { colors, fonts, shadow } from '@/theme';
@@ -25,17 +26,34 @@ export function PoweredBy() {
   );
 }
 
-/** Shown while fonts load and the saved sign-in is checked. Matches the approved Splash board. */
+/** The logo settles in: 0.85 to full size while it fades up. No overshoot. */
+const logoIn = new Keyframe({
+  0: { opacity: 0, transform: [{ scale: 0.85 }] },
+  100: { opacity: 1, transform: [{ scale: 1 }], easing: Easing.out(Easing.cubic) },
+})
+  .duration(480)
+  .reduceMotion(ReduceMotion.System);
+
+const fadeInAfter = (delay: number) => FadeIn.delay(delay).duration(360).reduceMotion(ReduceMotion.System);
+
+/**
+ * Shown while fonts load and the saved sign-in is checked. Matches the approved Splash board.
+ * The root layout keeps this mounted and fades it out over the app, so there is no flash between them.
+ */
 export function BrandSplash() {
   return (
     <View accessible accessibilityLabel={`${SCHOOL.name}, loading`} style={styles.splash}>
       <View style={styles.center}>
-        <SchoolMark size={112} />
-        <Text style={styles.name}>{SCHOOL.name}</Text>
+        <Animated.View entering={logoIn}>
+          <SchoolMark size={112} />
+        </Animated.View>
+        <Animated.View entering={fadeInAfter(180)}>
+          <Text style={styles.name}>{SCHOOL.name}</Text>
+        </Animated.View>
       </View>
-      <View style={styles.bottom}>
+      <Animated.View entering={fadeInAfter(320)} style={styles.bottom}>
         <PoweredBy />
-      </View>
+      </Animated.View>
     </View>
   );
 }

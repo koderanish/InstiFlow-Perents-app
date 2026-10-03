@@ -3,11 +3,13 @@ import { StyleSheet, View } from 'react-native';
 import { Avatar, CallButton, DetailCard, Hint, Section, openUrl, type DetailItem } from '@/components/account/bits';
 import { useGoBack } from '@/components/account/nav';
 import { QueryBoundary, useChildPage } from '@/components/account/page-state';
+import { InsetList, Tray } from '@/components/account/surfaces';
 import { AppText, BackHeader, Screen } from '@/components/ui';
 import { useChildProfile } from '@/features/parent/hooks';
 import { present, telUrl } from '@/lib/contact';
 import { fullDate } from '@/lib/dates';
-import { colors, fonts, radius, shadow } from '@/theme';
+import { Reveal } from '@/motion/reveal';
+import { colors, fonts } from '@/theme';
 import type { ChildProfile } from '@/types/parent';
 
 const classLabel = (p: ChildProfile): string | null => {
@@ -42,7 +44,8 @@ function detailItems(p: ChildProfile): DetailItem[] {
 function Guardians({ items }: { items: ChildProfile['guardians'] }) {
   return (
     <Section title="Parents and guardians">
-      <View style={[styles.card, shadow.card]}>
+      <Tray>
+        <InsetList>
         {items.map((g, i) => {
           const phone = present(g.phone);
           const relation = present(g.relation);
@@ -51,14 +54,14 @@ function Guardians({ items }: { items: ChildProfile['guardians'] }) {
             <View key={`${g.name}-${i}`} style={[styles.row, i < items.length - 1 && styles.divider]}>
               <Avatar name={g.name} />
               <View style={{ flex: 1 }}>
-                <AppText style={{ fontFamily: fonts.semibold, fontSize: 16 }}>{g.name}</AppText>
+                <AppText numberOfLines={2} style={{ fontFamily: fonts.semibold, fontSize: 16 }}>{g.name}</AppText>
                 {sub ? (
                   <AppText variant="caption" style={{ marginTop: 2 }}>
                     {sub}
                   </AppText>
                 ) : null}
                 {phone ? (
-                  <AppText variant="caption" style={{ marginTop: 2 }}>
+                  <AppText variant="caption" tabular style={{ marginTop: 2 }}>
                     {phone}
                   </AppText>
                 ) : null}
@@ -67,7 +70,8 @@ function Guardians({ items }: { items: ChildProfile['guardians'] }) {
             </View>
           );
         })}
-      </View>
+        </InsetList>
+      </Tray>
       <Hint>The school office keeps this list. To change it, please ask the office.</Hint>
     </Section>
   );
@@ -77,8 +81,16 @@ function ProfileBody({ profile }: { profile: ChildProfile }) {
   const items = detailItems(profile);
   return (
     <>
-      {items.length > 0 ? <DetailCard items={items} /> : null}
-      {profile.guardians.length > 0 ? <Guardians items={profile.guardians} /> : null}
+      {items.length > 0 ? (
+        <Reveal index={0}>
+          <DetailCard items={items} />
+        </Reveal>
+      ) : null}
+      {profile.guardians.length > 0 ? (
+        <Reveal index={1}>
+          <Guardians items={profile.guardians} />
+        </Reveal>
+      ) : null}
     </>
   );
 }
@@ -114,7 +126,6 @@ export default function ChildProfileScreen() {
 }
 
 const styles = StyleSheet.create({
-  card: { backgroundColor: colors.card, borderRadius: radius.card },
   row: { flexDirection: 'row', alignItems: 'center', gap: 14, paddingHorizontal: 18, paddingVertical: 14, minHeight: 72 },
   divider: { borderBottomWidth: 1, borderBottomColor: colors.divider },
 });
