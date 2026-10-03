@@ -1,6 +1,7 @@
 import type { chat } from '../en/chat';
 
 export const chatHi: Record<keyof typeof chat, string> = {
+  'chat.linkHint': 'स्कूल ऑफ़िस को संदेश भेजें',
   'chat.title': 'स्कूल से पूछें',
   'chat.placeholder': 'संदेश लिखें',
   'chat.inputLabel': 'स्कूल को संदेश',

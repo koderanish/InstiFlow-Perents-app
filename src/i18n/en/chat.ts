@@ -1,5 +1,6 @@
 /** Strings for the chat screens. Keys are prefixed 'chat.' (or the screen's own prefix) to avoid clashes. */
 export const chat = {
+  'chat.linkHint': 'Message the school office',
   'chat.title': 'Ask the school',
   'chat.placeholder': 'Write a message',
   'chat.inputLabel': 'Message to the school',
