@@ -3,25 +3,33 @@ import { StyleSheet, View } from 'react-native';
 
 import { useGoBack } from '@/components/account/nav';
 import { QueryBoundary, useChildPage } from '@/components/account/page-state';
-import { WashCard, wash } from '@/components/account/surfaces';
+import { WashCard, useWash } from '@/components/account/surfaces';
 import { AppText, BackHeader, EmptyState, Screen } from '@/components/ui';
 import { SCHOOL } from '@/config/school';
 import { useNotices } from '@/features/parent/hooks';
-import { postedLabel } from '@/lib/dates';
+import { monthName, useLocale, useT, type Locale, type TFunction } from '@/i18n';
+import { postedInfo } from '@/lib/dates';
 import { clock } from '@/lib/format';
 import { categoryLabel, priorityInfo } from '@/lib/notices';
 import { Reveal } from '@/motion/reveal';
-import { colors, fonts } from '@/theme';
+import { fonts, useStyles, useTheme, type Theme } from '@/theme';
 import type { Notice } from '@/types/parent';
 
-const postedLine = (iso: string): string => {
-  const day = postedLabel(iso);
+const postedLine = (iso: string, t: TFunction, locale: Locale): string => {
+  const info = postedInfo(iso);
   const time = clock(iso);
-  const when = day === 'Today' || day === 'Yesterday' ? day.toLowerCase() : day ? `on ${day}` : '';
-  return ['Posted', when].filter(Boolean).join(' ') + (time ? `, ${time}` : '');
+  if (!info) return t('account.notice.posted');
+  if (info.kind === 'date') {
+    const date = `${info.day} ${monthName(locale, info.month)}`;
+    return time ? t('account.notice.postedOnAt', { date, time }) : t('account.notice.postedOn', { date });
+  }
+  if (info.kind === 'today') return time ? t('account.notice.postedTodayAt', { time }) : t('account.notice.postedToday');
+  return time ? t('account.notice.postedYesterdayAt', { time }) : t('account.notice.postedYesterday');
 };
 
 function Tag({ label, urgent }: { label: string; urgent?: boolean }) {
+  const styles = useStyles(createStyles);
+  const { colors } = useTheme();
   return (
     <View style={[styles.tag, urgent ? { backgroundColor: colors.badBg } : { backgroundColor: colors.accentTint }]}>
       <AppText style={{ fontFamily: fonts.semibold, fontSize: 12, color: urgent ? colors.badFg : colors.accentInk }}>{label}</AppText>
@@ -30,7 +38,12 @@ function Tag({ label, urgent }: { label: string; urgent?: boolean }) {
 }
 
 function NoticeCard({ notice }: { notice: Notice }) {
-  const priority = priorityInfo(notice.priority);
+  const styles = useStyles(createStyles);
+  const { colors } = useTheme();
+  const wash = useWash();
+  const t = useT();
+  const locale = useLocale();
+  const priority = priorityInfo(notice.priority, t);
   const category = categoryLabel(notice.category);
   const tint = priority?.tone === 'bad' ? colors.badBg : priority?.tone === 'warn' ? colors.warnBg : wash;
   return (
@@ -40,7 +53,7 @@ function NoticeCard({ notice }: { notice: Notice }) {
           <View style={styles.posted}>
             <View style={[styles.dot, { backgroundColor: priority?.tone === 'bad' ? colors.badFg : colors.accent }]} />
             <AppText variant="caption" style={{ fontFamily: fonts.medium, fontSize: 13, flexShrink: 1 }}>
-              {postedLine(notice.postedAt)}
+              {postedLine(notice.postedAt, t, locale)}
             </AppText>
           </View>
           <View style={{ flexDirection: 'row', gap: 6 }}>
@@ -55,13 +68,14 @@ function NoticeCard({ notice }: { notice: Notice }) {
         </AppText>
       </Reveal>
       <Reveal index={2}>
-        <AppText style={styles.body}>{notice.content?.trim() || 'The school did not add more details to this notice.'}</AppText>
+        <AppText style={styles.body}>{notice.content?.trim() || t('account.notice.noDetails')}</AppText>
       </Reveal>
     </WashCard>
   );
 }
 
 export default function NoticeScreen() {
+  const t = useT();
   const goBack = useGoBack();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const noticeId = Number(id);
@@ -69,7 +83,7 @@ export default function NoticeScreen() {
   const notices = useNotices(page.child?.id);
   return (
     <Screen
-      header={<BackHeader title="Notice" subtitle={`From ${SCHOOL.name}`} onBack={goBack} />}
+      header={<BackHeader title={t('account.notice.title')} subtitle={t('account.notice.from', { school: SCHOOL.name })} onBack={goBack} />}
       refreshing={notices.isRefetching}
       onRefresh={() => {
         void page.refetch();
@@ -83,7 +97,7 @@ export default function NoticeScreen() {
             return notice ? (
               <NoticeCard notice={notice} />
             ) : (
-              <EmptyState title="This notice is not in your list" message="It may have been removed by the school. Pull down to refresh, or go back to the Inbox." />
+              <EmptyState title={t('account.notice.missingTitle')} message={t('account.notice.missingMessage')} />
             );
           }}
         </QueryBoundary>
@@ -94,11 +108,12 @@ export default function NoticeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' },
-  posted: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
-  dot: { width: 8, height: 8, borderRadius: 4 },
-  tag: { minHeight: 24, paddingHorizontal: 10, borderRadius: 12, justifyContent: 'center' },
-  title: { fontFamily: fonts.semibold, fontSize: 24, lineHeight: 28, letterSpacing: -0.5, color: colors.ink, marginTop: 12 },
-  body: { fontFamily: fonts.body, fontSize: 16, lineHeight: 24, color: '#3B352F', marginTop: 12 },
-});
+const createStyles = ({ colors }: Theme) =>
+  StyleSheet.create({
+    top: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' },
+    posted: { flexDirection: 'row', alignItems: 'center', gap: 8, flexShrink: 1 },
+    dot: { width: 8, height: 8, borderRadius: 4 },
+    tag: { minHeight: 24, paddingHorizontal: 10, borderRadius: 12, justifyContent: 'center' },
+    title: { fontFamily: fonts.semibold, fontSize: 24, lineHeight: 28, letterSpacing: -0.5, color: colors.ink, marginTop: 12 },
+    body: { fontFamily: fonts.body, fontSize: 16, lineHeight: 24, color: colors.ink, marginTop: 12 },
+  });

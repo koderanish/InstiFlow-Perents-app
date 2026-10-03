@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { AppText, Chip } from '@/components/ui';
 import { useChildren } from '@/features/parent/hooks';
+import { useT, type TFunction } from '@/i18n';
 import { firstName } from '@/lib/format';
 import { dotProgress, pageIndex } from '@/lib/pager';
 import type { Tone } from '@/lib/status-copy';
@@ -20,9 +21,10 @@ import { tapHaptic } from '@/motion/haptics';
 import { enterFade, exitFade } from '@/motion/presets';
 import { PressableScale } from '@/motion/pressable-scale';
 import { usePrefsStore } from '@/stores/prefs-store';
-import { colors, fonts, radius, shadow } from '@/theme';
+import { fonts, radius, useStyles, useTheme, type Theme } from '@/theme';
 
 interface Tip {
+  id: string;
   chip: string;
   tone: Tone;
   sample: string;
@@ -31,35 +33,40 @@ interface Tip {
   body: string;
 }
 
-const tipsFor = (kid: string): Tip[] => [
+const tipsFor = (kid: string, t: TFunction): Tip[] => [
   {
-    chip: 'Today',
+    id: 'today',
+    chip: t('account.tips.today.chip'),
     tone: 'good',
-    sample: `${kid} is at school`,
-    sampleLine: 'Attendance, bus and fees in one place',
-    title: `See ${kid}'s day\nat a glance`,
-    body: 'The Today tab shows attendance, the school bus and anything due. Pull down to refresh.',
+    sample: t('account.tips.today.sample', { name: kid }),
+    sampleLine: t('account.tips.today.sampleLine'),
+    title: t('account.tips.today.title', { name: kid }),
+    body: t('account.tips.today.body'),
   },
   {
-    chip: 'Fees',
+    id: 'fees',
+    chip: t('account.tips.fees.chip'),
     tone: 'warn',
-    sample: 'Term fees',
-    sampleLine: 'Open any invoice to see its receipt',
-    title: 'Check fees\nand receipts',
-    body: 'See what is due and share a receipt. For now, fees are paid at the school office.',
+    sample: t('account.tips.fees.sample'),
+    sampleLine: t('account.tips.fees.sampleLine'),
+    title: t('account.tips.fees.title'),
+    body: t('account.tips.fees.body'),
   },
   {
-    chip: 'Leave note',
+    id: 'leave',
+    chip: t('account.tips.leave.chip'),
     tone: 'neutral',
-    sample: `${kid} will be away`,
-    sampleLine: 'Send a note from your Profile',
-    title: 'Tell the school\nwhen needed',
-    body: 'Send a leave note and read school notices in the Inbox. You can change your choices in Profile.',
+    sample: t('account.tips.leave.sample', { name: kid }),
+    sampleLine: t('account.tips.leave.sampleLine'),
+    title: t('account.tips.leave.title'),
+    body: t('account.tips.leave.body'),
   },
 ];
 
 /** One card of the pager. Its art drifts a little slower than the page and the whole card fades as it leaves. */
 function TipPage({ tip, index, width, scrollX, total }: { tip: Tip; index: number; width: number; scrollX: SharedValue<number>; total: number }) {
+  const styles = useStyles(createStyles);
+  const t = useT();
   const art = useAnimatedStyle(() => {
     const near = dotProgress(scrollX.get(), width, index);
     return {
@@ -71,7 +78,7 @@ function TipPage({ tip, index, width, scrollX, total }: { tip: Tip; index: numbe
   return (
     <View style={[styles.page, { width }]}>
       <Animated.View style={[styles.art, art]}>
-        <View style={[styles.sample, shadow.card]}>
+        <View style={styles.sample}>
           <Chip label={tip.chip} tone={tip.tone} />
           <AppText style={{ fontFamily: fonts.semibold, fontSize: 19, marginTop: 10 }}>{tip.sample}</AppText>
           <AppText variant="caption" style={{ marginTop: 2 }}>
@@ -79,7 +86,11 @@ function TipPage({ tip, index, width, scrollX, total }: { tip: Tip; index: numbe
           </AppText>
         </View>
       </Animated.View>
-      <Animated.View accessible accessibilityLabel={`Tip ${index + 1} of ${total}. ${tip.title.replace('\n', ' ')}. ${tip.body}`} style={[{ gap: 12 }, copy]}>
+      <Animated.View
+        accessible
+        accessibilityLabel={t('account.tips.pageLabel', { index: index + 1, total, title: tip.title.replace('\n', ' '), body: tip.body })}
+        style={[{ gap: 12 }, copy]}
+      >
         <AppText variant="title">{tip.title}</AppText>
         <AppText variant="caption" style={{ fontSize: 17, lineHeight: 25 }}>
           {tip.body}
@@ -91,14 +102,20 @@ function TipPage({ tip, index, width, scrollX, total }: { tip: Tip; index: numbe
 
 /** A dot that stretches into a pill and takes the accent colour as its page scrolls into view. */
 function PagerDot({ index, width, scrollX }: { index: number; width: number; scrollX: SharedValue<number> }) {
+  const styles = useStyles(createStyles);
+  const { colors } = useTheme();
+  const { border, accent } = colors;
   const style = useAnimatedStyle(() => {
     const near = dotProgress(scrollX.get(), width, index);
-    return { width: interpolate(near, [0, 1], [8, 24]), backgroundColor: interpolateColor(near, [0, 1], [colors.border, colors.accent]) };
+    return { width: interpolate(near, [0, 1], [8, 24]), backgroundColor: interpolateColor(near, [0, 1], [border, accent]) };
   });
   return <Animated.View style={[styles.dot, style]} />;
 }
 
 export default function TipsScreen() {
+  const styles = useStyles(createStyles);
+  const { colors } = useTheme();
+  const t = useT();
   const router = useRouter();
   const { width } = useWindowDimensions();
   const { child } = useChildren();
@@ -106,7 +123,7 @@ export default function TipsScreen() {
   const [index, setIndex] = useState(0);
   const scrollX = useSharedValue(0);
   const scroller = useRef<ScrollView | null>(null);
-  const tips = tipsFor(child ? firstName(child.name) : 'Your child');
+  const tips = tipsFor(child ? firstName(child.name) : t('account.tips.yourChild'), t);
   const last = index === tips.length - 1;
 
   const onScroll = useAnimatedScrollHandler((e) => {
@@ -140,8 +157,8 @@ export default function TipsScreen() {
       <View style={styles.top}>
         {last ? null : (
           <Animated.View entering={enterFade(0)} exiting={exitFade}>
-            <PressableScale accessibilityRole="button" accessibilityLabel="Skip the tips" haptic={false} onPress={finish} style={styles.skip}>
-              <AppText style={{ fontFamily: fonts.semibold, fontSize: 15, color: colors.muted }}>Skip</AppText>
+            <PressableScale accessibilityRole="button" accessibilityLabel={t('account.tips.skipLabel')} haptic={false} onPress={finish} style={styles.skip}>
+              <AppText style={{ fontFamily: fonts.semibold, fontSize: 15, color: colors.muted }}>{t('account.tips.skip')}</AppText>
             </PressableScale>
           </Animated.View>
         )}
@@ -159,27 +176,27 @@ export default function TipsScreen() {
         style={styles.pager}
       >
         {tips.map((tip, i) => (
-          <TipPage key={tip.chip} tip={tip} index={i} width={width} scrollX={scrollX} total={tips.length} />
+          <TipPage key={tip.id} tip={tip} index={i} width={width} scrollX={scrollX} total={tips.length} />
         ))}
       </Animated.ScrollView>
 
       <View style={styles.bottom}>
         <View accessibilityElementsHidden importantForAccessibility="no" style={styles.dots}>
-          {tips.map((t, i) => (
-            <PagerDot key={t.chip} index={i} width={width} scrollX={scrollX} />
+          {tips.map((tip, i) => (
+            <PagerDot key={tip.id} index={i} width={width} scrollX={scrollX} />
           ))}
         </View>
         <View style={styles.cta}>
           {last ? (
             <Animated.View key="start" entering={enterFade(0)} exiting={exitFade} style={styles.ctaFill}>
-              <PressableScale accessibilityRole="button" haptic="press" onPress={finish} style={[styles.next, { backgroundColor: colors.accent }]}>
-                <AppText maxFontSizeMultiplier={1.3} style={{ fontFamily: fonts.bold, fontSize: 16, color: colors.onAccent }}>Get started</AppText>
+              <PressableScale accessibilityRole="button" haptic="press" onPress={finish} style={styles.start}>
+                <AppText maxFontSizeMultiplier={1.3} style={{ fontFamily: fonts.bold, fontSize: 16, color: colors.onAccent }}>{t('account.tips.start')}</AppText>
               </PressableScale>
             </Animated.View>
           ) : (
             <Animated.View key="next" entering={enterFade(0)} exiting={exitFade} style={styles.ctaFill}>
-              <PressableScale accessibilityRole="button" onPress={goNext} style={[styles.next, { backgroundColor: colors.accentTint }]}>
-                <AppText maxFontSizeMultiplier={1.3} style={{ fontFamily: fonts.bold, fontSize: 16, color: colors.accentInk }}>Next</AppText>
+              <PressableScale accessibilityRole="button" onPress={goNext} style={styles.nextButton}>
+                <AppText maxFontSizeMultiplier={1.3} style={{ fontFamily: fonts.bold, fontSize: 16, color: colors.accentInk }}>{t('account.tips.next')}</AppText>
               </PressableScale>
             </Animated.View>
           )}
@@ -189,18 +206,20 @@ export default function TipsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: colors.bg },
-  top: { alignItems: 'flex-end', minHeight: 52, paddingTop: 8, paddingHorizontal: 24 },
-  skip: { minHeight: 44, minWidth: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8 },
-  pager: { flex: 1 },
-  page: { justifyContent: 'center', gap: 28, paddingHorizontal: 24 },
-  art: { minHeight: 240, borderRadius: radius.hero, backgroundColor: colors.accentTint, alignItems: 'center', justifyContent: 'center', padding: 24 },
-  sample: { alignSelf: 'stretch', backgroundColor: colors.card, borderRadius: 24, padding: 20 },
-  bottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingBottom: 24, paddingTop: 12 },
-  dots: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  dot: { height: 8, borderRadius: 4 },
-  cta: { width: 148, height: 52 },
-  ctaFill: { ...StyleSheet.absoluteFill },
-  next: { flex: 1, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
-});
+const createStyles = ({ colors, shadow }: Theme) =>
+  StyleSheet.create({
+    screen: { flex: 1, backgroundColor: colors.bg },
+    top: { alignItems: 'flex-end', minHeight: 52, paddingTop: 8, paddingHorizontal: 24 },
+    skip: { minHeight: 44, minWidth: 44, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 8 },
+    pager: { flex: 1 },
+    page: { justifyContent: 'center', gap: 28, paddingHorizontal: 24 },
+    art: { minHeight: 240, borderRadius: radius.hero, backgroundColor: colors.accentTint, alignItems: 'center', justifyContent: 'center', padding: 24 },
+    sample: { alignSelf: 'stretch', backgroundColor: colors.card, borderRadius: 24, padding: 20, ...shadow.card },
+    bottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 24, paddingBottom: 24, paddingTop: 12 },
+    dots: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+    dot: { height: 8, borderRadius: 4 },
+    cta: { width: 148, height: 52 },
+    ctaFill: { ...StyleSheet.absoluteFill },
+    start: { flex: 1, borderRadius: 26, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.accent },
+    nextButton: { flex: 1, borderRadius: 26, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.accentTint },
+  });
