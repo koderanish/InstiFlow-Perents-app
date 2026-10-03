@@ -12,6 +12,10 @@ import { fonts, radius, useStyles, type Theme } from '@/theme';
 type QuickLink = { id: string; label: TKey; hint: TKey; icon: React.ComponentProps<typeof Feather>['name']; href: Href };
 
 const LINKS: QuickLink[] = [
+  { id: 'attendance', label: 'account.links.attendance', hint: 'account.links.attendanceHint', icon: 'calendar', href: '/(app)/attendance' },
+  { id: 'diary', label: 'account.links.diary', hint: 'account.links.diaryHint', icon: 'book', href: '/(app)/diary' },
+  { id: 'bus', label: 'account.links.bus', hint: 'account.links.busHint', icon: 'truck', href: '/(app)/bus' },
+  { id: 'reportCard', label: 'account.links.reportCard', hint: 'account.links.reportCardHint', icon: 'award', href: '/(app)/report-card' },
   { id: 'messages', label: 'chat.title', hint: 'chat.linkHint', icon: 'message-circle', href: '/(app)/messages' },
   { id: 'timetable', label: 'account.links.timetable', hint: 'account.links.timetableHint', icon: 'clock', href: '/(app)/timetable' },
   { id: 'exams', label: 'account.links.exams', hint: 'account.links.examsHint', icon: 'edit-3', href: '/(app)/exams' },
