@@ -18,6 +18,13 @@ export function createAuthService(client: ApiClient) {
     logout(): Promise<void> {
       return client.post<void>('/auth/logout', undefined, { skipAuthRefresh: true });
     },
+    /** Other sessions are signed out by the backend; this one stays valid. */
+    changePassword(input: { currentPassword: string; newPassword: string }): Promise<void> {
+      return client.put<void>('/auth/change-password', {
+        current_password: input.currentPassword,
+        new_password: input.newPassword,
+      });
+    },
     me(): Promise<AuthUser> {
       return client.get<AuthUser>('/auth/me');
     },

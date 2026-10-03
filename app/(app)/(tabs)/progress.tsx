@@ -9,7 +9,7 @@ import { LearnSectionTitle, LearnStatBar, LearnStatTile, LearnTitle } from '@/co
 import { reportCardHref } from '@/components/learn/routes';
 import { AppText, Card, Chip, Display, EmptyState, ErrorState, ListCard, ListRow, Loading, Screen } from '@/components/ui';
 import { useAttendance, useChildren, useExams, useHomework, useResults } from '@/features/parent/hooks';
-import { shortDateParts } from '@/lib/dates';
+import { shortDateParts } from '@/lib/learn-dates';
 import { friendlyError } from '@/lib/errors';
 import { buildExamPlan, nextPaperHeadline } from '@/lib/exams';
 import { firstName } from '@/lib/format';

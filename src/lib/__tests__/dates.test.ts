@@ -1,37 +1,50 @@
-import { dateKey, daysFromToday, shortDateParts } from '../dates';
+import { addDays, dayStrip, daysBetween, fullDate, isValidDay, postedLabel, shortDate, toISODate } from '../dates';
 
 describe('dates', () => {
-  // Friday 2 October 2026, late evening: must still count as 2 October.
-  const now = new Date(2026, 9, 2, 23, 40);
-
-  it('builds a local date key', () => {
-    expect(dateKey(now)).toBe('2026-10-02');
-    expect(dateKey(new Date(2026, 0, 5, 0, 5))).toBe('2026-01-05');
+  it('validates calendar days', () => {
+    expect(isValidDay('2026-10-05')).toBe(true);
+    expect(isValidDay('2026-02-30')).toBe(false);
+    expect(isValidDay('nope')).toBe(false);
+    expect(isValidDay(null)).toBe(false);
   });
 
-  it('counts whole days from today', () => {
-    expect(daysFromToday('2026-10-02', now)).toBe(0);
-    expect(daysFromToday('2026-10-03', now)).toBe(1);
-    expect(daysFromToday('2026-10-09', now)).toBe(7);
-    expect(daysFromToday('2026-10-01', now)).toBe(-1);
-    expect(daysFromToday('2026-10-09T00:00:00.000Z', now)).toBe(7);
+  it('adds days across month and year ends', () => {
+    expect(addDays('2026-10-31', 1)).toBe('2026-11-01');
+    expect(addDays('2026-12-31', 1)).toBe('2027-01-01');
+    expect(addDays('2026-03-01', -1)).toBe('2026-02-28');
+    expect(addDays('bad', 1)).toBeNull();
   });
 
-  it('crosses month and year boundaries', () => {
-    expect(daysFromToday('2026-11-01', now)).toBe(30);
-    expect(daysFromToday('2027-01-01', new Date(2026, 11, 31, 8, 0))).toBe(1);
+  it('counts days between', () => {
+    expect(daysBetween('2026-10-05', '2026-10-05')).toBe(0);
+    expect(daysBetween('2026-10-05', '2026-10-08')).toBe(3);
+    expect(daysBetween('2026-10-08', '2026-10-05')).toBe(-3);
+    expect(daysBetween('x', '2026-10-05')).toBeNull();
   });
 
-  it('returns null for unreadable dates', () => {
-    expect(daysFromToday(null, now)).toBeNull();
-    expect(daysFromToday('soon', now)).toBeNull();
-    expect(daysFromToday('2026-13-01', now)).toBeNull();
+  it('formats short and full dates', () => {
+    expect(shortDate('2026-10-05')).toBe('Mon, 5 Oct');
+    expect(shortDate('x')).toBeNull();
+    expect(fullDate('2014-03-14')).toBe('14 March 2014');
+    expect(fullDate(null)).toBeNull();
   });
 
-  it('splits a date for tiles', () => {
-    expect(shortDateParts('2026-10-09')).toEqual({ day: '9', month: 'Oct' });
-    expect(shortDateParts('2026-12-25')).toEqual({ day: '25', month: 'Dec' });
-    expect(shortDateParts('nope')).toBeNull();
-    expect(shortDateParts(undefined)).toBeNull();
+  it('formats the local day of a Date', () => {
+    expect(toISODate(new Date(2026, 0, 9, 23, 59))).toBe('2026-01-09');
+  });
+
+  it('builds a strip of consecutive days', () => {
+    const strip = dayStrip('2026-10-30', 4);
+    expect(strip.map((d) => d.iso)).toEqual(['2026-10-30', '2026-10-31', '2026-11-01', '2026-11-02']);
+    expect(strip[0]).toEqual({ iso: '2026-10-30', weekday: 'Fri', day: 30, month: 'Oct' });
+    expect(dayStrip('bad', 3)).toEqual([]);
+  });
+
+  it('labels when something was posted', () => {
+    const now = new Date(2026, 9, 3, 12, 0);
+    expect(postedLabel(new Date(2026, 9, 3, 8, 15).toISOString(), now)).toBe('Today');
+    expect(postedLabel(new Date(2026, 9, 2, 20, 0).toISOString(), now)).toBe('Yesterday');
+    expect(postedLabel(new Date(2026, 8, 28, 9, 0).toISOString(), now)).toBe('28 September');
+    expect(postedLabel('nonsense', now)).toBe('');
   });
 });

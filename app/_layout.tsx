@@ -12,8 +12,10 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { BrandSplash } from '@/components/account/brand';
 import { AppProviders, queryClient } from '@/providers/query-provider';
 import { useAuthStore } from '@/stores/auth-store';
+import { usePrefsStore } from '@/stores/prefs-store';
 import { colors } from '@/theme';
 
 void SplashScreen.preventAutoHideAsync();
@@ -28,6 +30,9 @@ export default function RootLayout() {
   });
   const status = useAuthStore((s) => s.status);
   const restoreSession = useAuthStore((s) => s.restoreSession);
+  const prefsReady = usePrefsStore((s) => s.hydrated);
+  const tipsSeen = usePrefsStore((s) => s.tipsSeen);
+  const restorePrefs = usePrefsStore((s) => s.restore);
   const segments = useSegments();
   const router = useRouter();
 
@@ -35,26 +40,41 @@ export default function RootLayout() {
     void restoreSession();
   }, [restoreSession]);
 
-  const ready = fontsLoaded && (status === 'authenticated' || status === 'unauthenticated');
-
   useEffect(() => {
-    if (ready) void SplashScreen.hideAsync();
-  }, [ready]);
+    void restorePrefs();
+  }, [restorePrefs]);
 
-  // Send signed-out parents to sign in, and signed-in parents away from it.
+  const ready = fontsLoaded && prefsReady && (status === 'authenticated' || status === 'unauthenticated');
+
+  // The native splash only covers the first moments. Once fonts are in, our own
+  // branded splash takes over until the saved sign-in has been checked.
+  useEffect(() => {
+    if (fontsLoaded) void SplashScreen.hideAsync();
+  }, [fontsLoaded]);
+
+  // Send signed-out parents to sign in, new parents to the tips once, and signed-in parents away from sign in.
   useEffect(() => {
     if (!ready) return;
-    const inAuth = segments[0] === '(auth)';
-    if (status === 'unauthenticated' && !inAuth) router.replace('/(auth)/login');
-    if (status === 'authenticated' && inAuth) router.replace('/(app)/(tabs)');
-  }, [ready, status, segments, router]);
+    const parts: readonly string[] = segments;
+    const inAuth = parts[0] === '(auth)';
+    if (status === 'unauthenticated') {
+      if (!inAuth) router.replace('/(auth)/login');
+      return;
+    }
+    if (!tipsSeen) {
+      if (parts[1] !== 'tips') router.replace('/(app)/tips');
+      return;
+    }
+    if (inAuth) router.replace('/(app)/(tabs)');
+  }, [ready, status, tipsSeen, segments, router]);
 
   // A different parent signing in must never see the previous parent's cached data.
   useEffect(() => {
     if (status === 'unauthenticated') queryClient.clear();
   }, [status]);
 
-  if (!ready) return null;
+  if (!fontsLoaded) return null;
+  if (!ready) return <BrandSplash />;
 
   return (
     <SafeAreaProvider>

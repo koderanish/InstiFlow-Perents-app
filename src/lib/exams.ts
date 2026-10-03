@@ -1,4 +1,4 @@
-import { daysFromToday } from './dates';
+import { daysFromToday } from './learn-dates';
 import { clockFromTime, dayMonth } from './format';
 import type { ExamPaper, ExamSeries } from '@/types/parent';
 

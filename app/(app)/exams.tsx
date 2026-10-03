@@ -8,7 +8,7 @@ import { useNow, usePullRefresh } from '@/components/learn/hooks';
 import { LearnSectionTitle } from '@/components/learn/learn-parts';
 import { AppText, BackHeader, Card, EmptyState, ErrorState, ListCard, ListRow, Loading, Screen } from '@/components/ui';
 import { useChildren, useExams } from '@/features/parent/hooks';
-import { shortDateParts } from '@/lib/dates';
+import { shortDateParts } from '@/lib/learn-dates';
 import { friendlyError } from '@/lib/errors';
 import { buildExamPlan, daysToGo, nextPaperHeadline, paperNoteLine, paperTimeLine, paperWhen, seriesRange, type PaperView } from '@/lib/exams';
 import { firstName } from '@/lib/format';
