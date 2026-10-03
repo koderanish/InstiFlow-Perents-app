@@ -9,6 +9,7 @@ import { usePullRefresh } from '@/components/learn/hooks';
 import { HeroSurface, LearnSectionTitle } from '@/components/learn/learn-parts';
 import { PercentHero } from '@/components/learn/percent-hero';
 import { AppText, Card, EmptyState, ErrorState, ListCard, Loading, PrimaryButton } from '@/components/ui';
+import { SchoolMark } from '@/components/account/brand';
 import { useSchool } from '@/branding';
 import { useChildren, useResults } from '@/features/parent/hooks';
 import { useT } from '@/i18n';
@@ -77,11 +78,7 @@ function ReportCard({ child, result }: { child: ParentChild; result: ExamResult 
       <Reveal index={0}>
         <Card>
           <View style={styles.schoolRow}>
-            <View style={styles.logo}>
-              <AppText numberOfLines={1} style={{ fontFamily: fonts.bold, fontSize: 14, color: colors.accentInk }}>
-                {school.shortName}
-              </AppText>
-            </View>
+            <SchoolMark size={48} />
             <View style={{ flex: 1 }}>
               <AppText variant="heading" numberOfLines={2} ellipsizeMode="tail">
                 {school.name}
@@ -199,7 +196,6 @@ export default function ReportCardScreen() {
 const createStyles = ({ colors }: Theme) =>
   StyleSheet.create({
     schoolRow: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-    logo: { width: 48, height: 48, borderRadius: 16, backgroundColor: colors.accentTint, alignItems: 'center', justifyContent: 'center' },
     studentRow: { marginTop: 16, paddingTop: 16, borderTopWidth: 1, borderTopColor: colors.divider },
     row: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 18, paddingVertical: 14 },
     rowDivider: { borderBottomWidth: 1, borderBottomColor: colors.divider },
