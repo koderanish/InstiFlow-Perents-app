@@ -1,0 +1,8 @@
+{
+  "name": "Sample Public School",
+  "shortName": "SP",
+  "schoolCode": "SAMPLE",
+  "accent": "#FF4F2E",
+  "slug": "sample-public-school",
+  "bundleId": "com.instiflow.parents.sample"
+}
