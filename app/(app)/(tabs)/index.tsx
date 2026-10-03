@@ -101,8 +101,8 @@ export default function TodayScreen() {
       <Reveal index={0}>
         <View style={styles.header}>
           <View style={styles.school}>
-            <SchoolMark size={32} />
-            <AppText variant="caption" numberOfLines={1} style={{ fontFamily: fonts.medium, flexShrink: 1 }}>
+            <SchoolMark size={48} />
+            <AppText variant="body" numberOfLines={2} style={{ fontFamily: fonts.bold, fontSize: 17, lineHeight: 22, flexShrink: 1 }}>
               {school.name}
             </AppText>
           </View>
@@ -127,6 +127,6 @@ export default function TodayScreen() {
 const createStyles = ({ colors }: Theme) =>
   StyleSheet.create({
     header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-    school: { flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 1 },
+    school: { flexDirection: 'row', alignItems: 'center', gap: 12, flexShrink: 1 },
     avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   });
