@@ -28,7 +28,11 @@ npm start
 
 Sign in, Today, School bus, Attendance, Today in class (diary), Fees, Inbox and Profile. They use the parent API under `/api/parent/children/:studentId/...` and `/api/parent/dashboard`.
 
-Not built yet: exam results and report card, timetable, leave note, notice detail, home screen widgets, live bus location (needs driver app GPS).
+Also built: leave notes, notice detail and category filter, fee receipts (share as text), child profile, contact the school, notification choices (saved on the phone only), change password, a branded splash and a first-run tips screen.
+
+Fees are paid at the school office: the app has no online payment yet.
+
+Not built yet: home screen widgets, live bus location (needs driver app GPS).
 
 ## Checks
 

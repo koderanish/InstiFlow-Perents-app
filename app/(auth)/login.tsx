@@ -75,6 +75,14 @@ export default function LoginScreen() {
               </AppText>
             ) : null}
             <PrimaryButton label="Sign in" onPress={submit} loading={busy} disabled={!canSubmit} />
+            <View style={{ gap: 2, alignItems: 'center', paddingHorizontal: 8 }}>
+              <AppText variant="caption" style={{ fontSize: 14, lineHeight: 20, textAlign: 'center' }}>
+                Forgot your password? Ask the school office to reset it.
+              </AppText>
+              <AppText variant="caption" style={{ fontSize: 13, fontFamily: fonts.semibold, textAlign: 'center' }}>
+                {SCHOOL.name}
+              </AppText>
+            </View>
           </View>
 
           <View style={styles.footer}>
@@ -103,5 +111,5 @@ const styles = StyleSheet.create({
     color: colors.ink,
   },
   footer: { marginTop: 'auto', paddingTop: 40, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
-  footerMark: { width: 14, height: 14, borderRadius: 4, backgroundColor: '#FF4F2E' },
+  footerMark: { width: 14, height: 14, borderRadius: 4, backgroundColor: colors.accent },
 });
