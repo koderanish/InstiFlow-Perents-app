@@ -29,11 +29,11 @@ export function PressableScale({ style, scaleTo = PRESS_SCALE, haptic = 'tap', d
       {...rest}
       disabled={disabled}
       onPressIn={(e) => {
-        scale.value = withSpring(target, SPRING);
+        scale.set(withSpring(target, SPRING));
         onPressIn?.(e);
       }}
       onPressOut={(e) => {
-        scale.value = withSpring(1, SPRING);
+        scale.set(withSpring(1, SPRING));
         onPressOut?.(e);
       }}
       onPress={(e) => {
