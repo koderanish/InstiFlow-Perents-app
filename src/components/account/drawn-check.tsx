@@ -1,9 +1,12 @@
 import { useEffect } from 'react';
-import { View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Animated, { Easing, useAnimatedProps, useReducedMotion, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 import { useTheme } from '@/theme';
+
+/** Start the ring at 12 o'clock. A View transform, because SVG rotation/origin props are invalid DOM attributes on web. */
+const ringRotation = { transform: [{ rotate: '-90deg' }] } as const;
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 const AnimatedPath = Animated.createAnimatedComponent(Path);
@@ -36,7 +39,7 @@ export function DrawnCheck({ size = 72, color, background }: { size?: number; co
 
   return (
     <View accessibilityElementsHidden importantForAccessibility="no" style={{ width: size, height: size }}>
-      <Svg width={size} height={size} viewBox="0 0 72 72">
+      <Svg width={size} height={size} viewBox="0 0 72 72" style={ringRotation}>
         <Circle cx={36} cy={36} r={RADIUS} fill={fill} />
         <AnimatedCircle
           cx={36}
@@ -47,10 +50,10 @@ export function DrawnCheck({ size = 72, color, background }: { size?: number; co
           strokeLinecap="round"
           fill="none"
           strokeDasharray={`${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
-          rotation={-90}
-          origin="36, 36"
           animatedProps={ringProps}
         />
+      </Svg>
+      <Svg width={size} height={size} viewBox="0 0 72 72" style={StyleSheet.absoluteFill}>
         <AnimatedPath
           d="M23 37 L32 46 L49 27"
           stroke={stroke}

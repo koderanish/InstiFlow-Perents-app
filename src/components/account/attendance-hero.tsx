@@ -69,7 +69,8 @@ function StatusGlyph({ tone, icon }: { tone: Tone; icon: React.ComponentProps<ty
 
   return (
     <View accessibilityElementsHidden importantForAccessibility="no" style={styles.glyph}>
-      <Svg width={GLYPH} height={GLYPH} viewBox={`0 0 ${GLYPH} ${GLYPH}`}>
+      {/* Rotated with a View transform: SVG rotation/origin props become an invalid DOM attribute on web. */}
+      <Svg width={GLYPH} height={GLYPH} viewBox={`0 0 ${GLYPH} ${GLYPH}`} style={ringRotation}>
         <Circle cx={GLYPH / 2} cy={GLYPH / 2} r={RING_RADIUS} fill={c.bg} />
         <AnimatedCircle
           cx={GLYPH / 2}
@@ -80,8 +81,6 @@ function StatusGlyph({ tone, icon }: { tone: Tone; icon: React.ComponentProps<ty
           strokeLinecap="round"
           fill="none"
           strokeDasharray={`${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
-          rotation={-90}
-          origin={`${GLYPH / 2}, ${GLYPH / 2}`}
           animatedProps={ringProps}
         />
       </Svg>
@@ -114,6 +113,9 @@ export function AttendanceHero({ hero, status }: { hero: Hero; status: Attendanc
     </Link>
   );
 }
+
+/** Start the ring at 12 o'clock. */
+const ringRotation = { transform: [{ rotate: '-90deg' }] } as const;
 
 const styles = StyleSheet.create({
   press: { borderRadius: radius.hero },
