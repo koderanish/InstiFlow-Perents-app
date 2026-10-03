@@ -3,18 +3,22 @@ import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
+import { useErrorText, useIsOffline } from '@/components/account/error-text';
 import { AppText, EmptyState, ErrorState } from '@/components/ui';
 import { useChildren } from '@/features/parent/hooks';
-import { friendlyError, isOffline } from '@/lib/errors';
+import { useT } from '@/i18n';
+import { isOffline } from '@/lib/errors';
 import { clock } from '@/lib/format';
 import { enterRise, exitFade } from '@/motion/presets';
 import { Skeleton } from '@/motion/skeleton';
-import { colors, fonts } from '@/theme';
+import { fonts, useStyles, type Theme } from '@/theme';
 
 /** Placeholder blocks while the first load runs (matches the approved loading board). They breathe, they do not spin. */
 export function SkeletonCards({ rows = 3 }: { rows?: number }) {
+  const styles = useStyles(createStyles);
+  const t = useT();
   return (
-    <View accessible accessibilityLabel="Loading" accessibilityState={{ busy: true }} style={styles.skeletonWrap}>
+    <View accessible accessibilityLabel={t('common.loading')} accessibilityState={{ busy: true }} style={styles.skeletonWrap}>
       <Skeleton width="55%" height={28} rounded={10} />
       {Array.from({ length: rows }, (_, i) => (
         <View key={i} style={styles.skeletonCard}>
@@ -29,9 +33,18 @@ export function SkeletonCards({ rows = 3 }: { rows?: number }) {
 
 /** "No internet" strip shown above saved data when a refresh fails. */
 export function StaleBanner({ error, savedAt }: { error: unknown; savedAt: number }) {
+  const styles = useStyles(createStyles);
+  const t = useT();
+  const phoneOffline = useIsOffline();
   const when = savedAt > 0 ? clock(new Date(savedAt).toISOString()) : null;
-  const lead = isOffline(error) ? 'No internet.' : 'Could not refresh.';
-  const text = when ? `${lead} Showing what we saved at ${when}.` : `${lead} Showing what we saved.`;
+  const offline = phoneOffline || isOffline(error);
+  const text = offline
+    ? when
+      ? t('account.stale.offlineAt', { time: when })
+      : t('account.stale.offline')
+    : when
+      ? t('account.stale.failedAt', { time: when })
+      : t('account.stale.failed');
   return (
     <Animated.View accessibilityRole="alert" entering={enterRise(0)} exiting={exitFade} style={styles.banner}>
       <View style={styles.bannerDot} />
@@ -55,9 +68,10 @@ export function QueryBoundary<T>({
   empty?: { title: string; message?: string };
   children: (data: T) => ReactNode;
 }) {
+  const errorText = useErrorText();
   const { data } = query;
   if (data === undefined) {
-    if (query.isError) return <ErrorState message={friendlyError(query.error)} onRetry={() => void query.refetch()} />;
+    if (query.isError) return <ErrorState message={errorText(query.error)} onRetry={() => void query.refetch()} />;
     return <SkeletonCards />;
   }
   if (isEmpty?.(data) && empty) return <EmptyState title={empty.title} message={empty.message} />;
@@ -71,25 +85,23 @@ export function QueryBoundary<T>({
 
 /** Resolves which child a page is about; `gate` is the state to show until one is known. */
 export function useChildPage() {
+  const t = useT();
+  const errorText = useErrorText();
   const { child, children: all, isLoading, isError, error, refetch } = useChildren();
   let gate: ReactNode = null;
   if (isLoading) gate = <SkeletonCards />;
-  else if (isError && !child) gate = <ErrorState message={friendlyError(error)} onRetry={() => void refetch()} />;
+  else if (isError && !child) gate = <ErrorState message={errorText(error)} onRetry={() => void refetch()} />;
   else if (!child) {
-    gate = (
-      <EmptyState
-        title="No children linked yet"
-        message="The school has not linked a child to this account. Please contact the school office."
-      />
-    );
+    gate = <EmptyState title={t('account.noChildren.title')} message={t('account.noChildren.message')} />;
   }
   return { child, all, gate, refetch };
 }
 
-const styles = StyleSheet.create({
-  skeletonWrap: { gap: 16 },
-  skeletonCard: { backgroundColor: colors.card, borderRadius: 24, padding: 20 },
-  banner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.warnBg, borderRadius: 18, paddingHorizontal: 14, paddingVertical: 10 },
-  bannerDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.warnFg },
-  bannerText: { flex: 1, fontFamily: fonts.semibold, fontSize: 13, color: colors.warnFg },
-});
+const createStyles = ({ colors }: Theme) =>
+  StyleSheet.create({
+    skeletonWrap: { gap: 16 },
+    skeletonCard: { backgroundColor: colors.card, borderRadius: 24, padding: 20 },
+    banner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.warnBg, borderRadius: 18, paddingHorizontal: 14, paddingVertical: 10 },
+    bannerDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.warnFg },
+    bannerText: { flex: 1, fontFamily: fonts.semibold, fontSize: 13, color: colors.warnFg },
+  });
