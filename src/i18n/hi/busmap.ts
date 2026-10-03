@@ -1,0 +1,27 @@
+import type { busmap } from '../en/busmap';
+
+export const busmapHi: Record<keyof typeof busmap, string> = {
+  'busMap.title': 'लाइव बस मैप',
+  'busMap.trackTitle': 'बस को लाइव ट्रैक करें',
+  'busMap.trackBody': 'देखें कि बस अभी कहाँ है।',
+  'busMap.live': 'लाइव',
+  'busMap.notLive': 'लाइव नहीं',
+  'busMap.speed': 'रफ़्तार',
+  'busMap.speedValue': '{speed} किमी/घंटा',
+  'busMap.updated': 'अपडेट',
+  'busMap.lastSeen': 'आख़िरी बार {ago} देखी गई',
+  'busMap.agoNow': 'अभी',
+  'busMap.agoSeconds': '{count} सेकंड पहले',
+  'busMap.agoMinutes': '{count} मिनट पहले',
+  'busMap.agoHours': '{count} घंटे पहले',
+  'busMap.agoDays': '{count} दिन पहले',
+  'busMap.notLiveTitle': 'बस की लोकेशन अभी लाइव नहीं है',
+  'busMap.notLiveBody': 'बस जैसे ही अपनी लोकेशन साझा करना शुरू करेगी, वह मैप पर दिखने लगेगी।',
+  'busMap.noRouteTitle': 'अभी कोई बस रूट नहीं',
+  'busMap.noRouteBody': '{name} को अभी कोई बस रूट नहीं दिया गया है। गलती लगे तो स्कूल ऑफ़िस से संपर्क करें।',
+  'busMap.unavailableTitle': 'इस फ़ोन पर मैप उपलब्ध नहीं है',
+  'busMap.unavailableBody': 'बस की स्थिति आप नीचे देख सकते हैं।',
+  'busMap.openInMaps': 'मैप्स में खोलें',
+  'busMap.recenter': 'मैप को बस पर लाएँ',
+  'busMap.busMarker': 'स्कूल बस',
+};

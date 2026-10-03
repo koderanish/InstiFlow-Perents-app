@@ -16,6 +16,7 @@ export const ALLOWED_ROUTES = [
   '/(app)/(tabs)/progress',
   '/(app)/attendance',
   '/(app)/bus',
+  '/(app)/bus-map',
   '/(app)/diary',
   '/(app)/events',
   '/(app)/exams',
