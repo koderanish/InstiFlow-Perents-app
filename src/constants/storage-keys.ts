@@ -6,4 +6,6 @@ export const SECURE_STORE_KEYS = {
   selectedChild: 'ifp.selectedChild',
   /** Notification choices and the first-run tips flag (not secret, but small and per phone). */
   prefs: 'ifp.prefs',
+  /** The school's logo and colour as the admin set them, so the next launch starts in the right colours. */
+  branding: 'ifp.branding',
 } as const;

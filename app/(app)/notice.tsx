@@ -5,7 +5,7 @@ import { useGoBack } from '@/components/account/nav';
 import { QueryBoundary, useChildPage } from '@/components/account/page-state';
 import { WashCard, useWash } from '@/components/account/surfaces';
 import { AppText, BackHeader, EmptyState, Screen } from '@/components/ui';
-import { SCHOOL } from '@/config/school';
+import { useSchool } from '@/branding';
 import { useNotices } from '@/features/parent/hooks';
 import { monthName, useLocale, useT, type Locale, type TFunction } from '@/i18n';
 import { postedInfo } from '@/lib/dates';
@@ -76,6 +76,7 @@ function NoticeCard({ notice }: { notice: Notice }) {
 
 export default function NoticeScreen() {
   const t = useT();
+  const school = useSchool();
   const goBack = useGoBack();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const noticeId = Number(id);
@@ -83,7 +84,7 @@ export default function NoticeScreen() {
   const notices = useNotices(page.child?.id);
   return (
     <Screen
-      header={<BackHeader title={t('account.notice.title')} subtitle={t('account.notice.from', { school: SCHOOL.name })} onBack={goBack} />}
+      header={<BackHeader title={t('account.notice.title')} subtitle={t('account.notice.from', { school: school.name })} onBack={goBack} />}
       refreshing={notices.isRefetching}
       onRefresh={() => {
         void page.refetch();

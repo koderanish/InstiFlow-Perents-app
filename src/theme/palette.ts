@@ -1,3 +1,4 @@
+import { onColour } from '@/branding/rules';
 import { SCHOOL } from '@/config/school';
 
 const channel = (hex: string, shift: number) => parseInt(hex.slice(shift, shift + 2), 16);
@@ -9,7 +10,7 @@ export const mix = (from: string, to: string, k: number): string => {
   return `#${[0, 2, 4].map((s) => ch(s).toString(16).padStart(2, '0')).join('')}`;
 };
 
-const base = /^#[0-9a-fA-F]{6}$/.test(SCHOOL.accent) ? SCHOOL.accent : '#FF4F2E';
+const safeAccent = (hex: string): string => (/^#[0-9a-fA-F]{6}$/.test(hex) ? hex : '#FF4F2E');
 
 export type Palette = {
   bg: string;
@@ -20,7 +21,7 @@ export type Palette = {
   border: string;
   divider: string;
   accent: string;
-  /** Text colour on the accent. Dark ink keeps good contrast on the brand colour in both themes. */
+  /** Text colour on the accent: dark ink or white, whichever reads better on the school's colour. */
   onAccent: string;
   accentInk: string;
   accentTint: string;
@@ -36,7 +37,9 @@ export type Palette = {
 };
 
 /** Colours are the approved Parents design. The accent is the school's own. */
-export const lightPalette: Palette = {
+export const makeLightPalette = (accent: string): Palette => {
+  const base = safeAccent(accent);
+  return {
   bg: '#FAF7F4',
   card: '#FFFFFF',
   ink: '#1F1B18',
@@ -45,7 +48,7 @@ export const lightPalette: Palette = {
   border: '#EFE8E2',
   divider: '#F3EDE8',
   accent: base,
-  onAccent: '#1F1B18',
+  onAccent: onColour(base),
   accentInk: mix(base, '#000000', 0.32),
   accentTint: mix(base, '#ffffff', 0.88),
   goodBg: '#E7F4EC',
@@ -56,10 +59,13 @@ export const lightPalette: Palette = {
   badBg: '#FDE8EB',
   badFg: '#B4233A',
   scrim: 'rgba(31, 27, 24, 0.45)',
+  };
 };
 
 /** Warm near-black, never pure #000: same family as the light theme. */
-export const darkPalette: Palette = {
+export const makeDarkPalette = (accent: string): Palette => {
+  const base = safeAccent(accent);
+  return {
   bg: '#14110F',
   card: '#201B18',
   ink: '#F6F0EA',
@@ -68,7 +74,7 @@ export const darkPalette: Palette = {
   border: '#332D29',
   divider: '#2A2420',
   accent: base,
-  onAccent: '#1F1B18',
+  onAccent: onColour(base),
   accentInk: mix(base, '#ffffff', 0.42),
   accentTint: mix(base, '#14110F', 0.8),
   goodBg: '#16301F',
@@ -79,7 +85,12 @@ export const darkPalette: Palette = {
   badBg: '#3B1A20',
   badFg: '#F28B9B',
   scrim: 'rgba(0, 0, 0, 0.62)',
+  };
 };
+
+/** The palettes in the school's compiled-in colour. Runtime branding goes through `makeLightPalette`/`makeDarkPalette`. */
+export const lightPalette = makeLightPalette(SCHOOL.accent);
+export const darkPalette = makeDarkPalette(SCHOOL.accent);
 
 export type Shadows = {
   card: {

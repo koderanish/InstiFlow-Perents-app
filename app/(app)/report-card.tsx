@@ -9,7 +9,7 @@ import { usePullRefresh } from '@/components/learn/hooks';
 import { HeroSurface, LearnSectionTitle } from '@/components/learn/learn-parts';
 import { PercentHero } from '@/components/learn/percent-hero';
 import { AppText, Card, EmptyState, ErrorState, ListCard, Loading, PrimaryButton } from '@/components/ui';
-import { SCHOOL } from '@/config/school';
+import { useSchool } from '@/branding';
 import { useChildren, useResults } from '@/features/parent/hooks';
 import { useT } from '@/i18n';
 import { friendlyError } from '@/lib/errors';
@@ -52,6 +52,7 @@ function SubjectRow({ subject, index }: { subject: SubjectResult; index: number 
 
 function ReportCard({ child, result }: { child: ParentChild; result: ExamResult }) {
   const t = useT();
+  const school = useSchool();
   const styles = useStyles(createStyles);
   const { colors } = useTheme();
   const badge = resultBadge(result, t);
@@ -61,7 +62,7 @@ function ReportCard({ child, result }: { child: ParentChild; result: ExamResult 
   const share = async () => {
     try {
       const outcome = await Share.share({
-        message: reportCardText({ schoolName: SCHOOL.name, studentName: child.name, className: child.className || null, result }, t),
+        message: reportCardText({ schoolName: school.name, studentName: child.name, className: child.className || null, result }, t),
       });
       if (outcome.action === Share.sharedAction) successHaptic();
     } catch {
@@ -78,12 +79,12 @@ function ReportCard({ child, result }: { child: ParentChild; result: ExamResult 
           <View style={styles.schoolRow}>
             <View style={styles.logo}>
               <AppText numberOfLines={1} style={{ fontFamily: fonts.bold, fontSize: 14, color: colors.accentInk }}>
-                {SCHOOL.shortName}
+                {school.shortName}
               </AppText>
             </View>
             <View style={{ flex: 1 }}>
               <AppText variant="heading" numberOfLines={2} ellipsizeMode="tail">
-                {SCHOOL.name}
+                {school.name}
               </AppText>
               <AppText variant="caption" numberOfLines={1} ellipsizeMode="tail" style={{ fontSize: 13 }}>
                 {result.name}

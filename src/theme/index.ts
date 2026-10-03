@@ -1,6 +1,6 @@
 import { lightPalette, makeShadows } from './palette';
 
-export { darkPalette, lightPalette, makeShadows, mix } from './palette';
+export { darkPalette, lightPalette, makeDarkPalette, makeLightPalette, makeShadows, mix } from './palette';
 export type { Palette, Shadows } from './palette';
 export { buildTheme, resolveScheme, ThemeProvider, useTheme } from './provider';
 export type { Theme } from './provider';

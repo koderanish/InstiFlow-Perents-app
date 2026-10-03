@@ -10,7 +10,7 @@ import { StaleBanner } from '@/components/account/page-state';
 import { ChildGate } from '@/components/child-gate';
 import { QuickLinks } from '@/components/quick-links';
 import { AppText, ErrorState, ListCard, ListRow, Loading, Screen } from '@/components/ui';
-import { SCHOOL } from '@/config/school';
+import { useSchool } from '@/branding';
 import { useChildren, useToday } from '@/features/parent/hooks';
 import { useLocale, useT } from '@/i18n';
 import { firstName, greeting, initials } from '@/lib/format';
@@ -93,6 +93,7 @@ export default function TodayScreen() {
   const styles = useStyles(createStyles);
   const { colors } = useTheme();
   const t = useT();
+  const school = useSchool();
   const user = useAuthStore((s) => s.user);
   const { refetch } = useChildren();
   return (
@@ -101,10 +102,10 @@ export default function TodayScreen() {
         <View style={styles.header}>
           <View style={styles.school}>
             <View style={styles.logo}>
-              <AppText style={{ fontFamily: fonts.bold, fontSize: 13, color: colors.accentInk }}>{SCHOOL.shortName}</AppText>
+              <AppText style={{ fontFamily: fonts.bold, fontSize: 13, color: colors.accentInk }}>{school.shortName}</AppText>
             </View>
             <AppText variant="caption" numberOfLines={1} style={{ fontFamily: fonts.medium, flexShrink: 1 }}>
-              {SCHOOL.name}
+              {school.name}
             </AppText>
           </View>
           <Link href="/(app)/profile" asChild>

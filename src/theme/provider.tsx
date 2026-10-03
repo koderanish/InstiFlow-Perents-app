@@ -1,10 +1,14 @@
 import { createContext, useContext, useMemo, type PropsWithChildren } from 'react';
 import { useColorScheme } from 'react-native';
 
+import { SCHOOL } from '@/config/school';
+
 import type { ThemeMode } from '@/lib/prefs';
 import { usePrefsStore } from '@/stores/prefs-store';
 
-import { darkPalette, lightPalette, makeShadows, type Palette, type Shadows } from './palette';
+import { useBrandingStore } from '@/branding/store';
+
+import { makeDarkPalette, makeLightPalette, makeShadows, type Palette, type Shadows } from './palette';
 
 export type Theme = {
   scheme: 'light' | 'dark';
@@ -18,10 +22,10 @@ export type Theme = {
 export const resolveScheme = (mode: ThemeMode, system: string | null | undefined): 'light' | 'dark' =>
   mode === 'system' ? (system === 'dark' ? 'dark' : 'light') : mode;
 
-export const buildTheme = (mode: ThemeMode, system: string | null | undefined): Theme => {
+export const buildTheme = (mode: ThemeMode, system: string | null | undefined, accent: string = SCHOOL.accent): Theme => {
   const scheme = resolveScheme(mode, system);
   const isDark = scheme === 'dark';
-  return { scheme, isDark, mode, colors: isDark ? darkPalette : lightPalette, shadow: makeShadows(isDark) };
+  return { scheme, isDark, mode, colors: isDark ? makeDarkPalette(accent) : makeLightPalette(accent), shadow: makeShadows(isDark) };
 };
 
 const ThemeContext = createContext<Theme>(buildTheme('light', 'light'));
@@ -29,7 +33,8 @@ const ThemeContext = createContext<Theme>(buildTheme('light', 'light'));
 export function ThemeProvider({ children }: PropsWithChildren) {
   const system = useColorScheme();
   const mode = usePrefsStore((s) => s.themeMode);
-  const theme = useMemo(() => buildTheme(mode, system), [mode, system]);
+  const accent = useBrandingStore((s) => s.branding.accent);
+  const theme = useMemo(() => buildTheme(mode, system, accent), [mode, system, accent]);
   return <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>;
 }
 
