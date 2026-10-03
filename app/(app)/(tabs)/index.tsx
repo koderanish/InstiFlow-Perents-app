@@ -10,6 +10,7 @@ import { StaleBanner } from '@/components/account/page-state';
 import { ChildGate } from '@/components/child-gate';
 import { QuickLinks } from '@/components/quick-links';
 import { AppText, ErrorState, ListCard, ListRow, Loading, Screen } from '@/components/ui';
+import { SchoolMark } from '@/components/account/brand';
 import { useSchool } from '@/branding';
 import { useChildren, useToday } from '@/features/parent/hooks';
 import { useLocale, useT } from '@/i18n';
@@ -18,7 +19,7 @@ import { attendanceHero, busLine, diaryLine, feesLine } from '@/lib/status-copy'
 import { PressableScale } from '@/motion/pressable-scale';
 import { Reveal } from '@/motion/reveal';
 import { useAuthStore } from '@/stores/auth-store';
-import { fonts, useStyles, useTheme, type Theme } from '@/theme';
+import { fonts, useStyles, type Theme } from '@/theme';
 import type { ParentChild } from '@/types/parent';
 
 /**
@@ -91,7 +92,6 @@ function TodayContent({ child, all }: { child: ParentChild; all: ParentChild[] }
 
 export default function TodayScreen() {
   const styles = useStyles(createStyles);
-  const { colors } = useTheme();
   const t = useT();
   const school = useSchool();
   const user = useAuthStore((s) => s.user);
@@ -101,9 +101,7 @@ export default function TodayScreen() {
       <Reveal index={0}>
         <View style={styles.header}>
           <View style={styles.school}>
-            <View style={styles.logo}>
-              <AppText style={{ fontFamily: fonts.bold, fontSize: 13, color: colors.accentInk }}>{school.shortName}</AppText>
-            </View>
+            <SchoolMark size={32} />
             <AppText variant="caption" numberOfLines={1} style={{ fontFamily: fonts.medium, flexShrink: 1 }}>
               {school.name}
             </AppText>
@@ -130,6 +128,5 @@ const createStyles = ({ colors }: Theme) =>
   StyleSheet.create({
     header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
     school: { flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 1 },
-    logo: { width: 32, height: 32, borderRadius: 10, backgroundColor: colors.accentTint, alignItems: 'center', justifyContent: 'center' },
     avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   });
