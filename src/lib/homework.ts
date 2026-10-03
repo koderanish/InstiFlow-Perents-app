@@ -1,3 +1,6 @@
+import { defaultT, type TFunction } from '@/i18n/translate';
+import type { Locale } from '@/i18n/types';
+
 import { daysFromToday } from './learn-dates';
 import { dayMonth } from './format';
 import type { Tone } from './status-copy';
@@ -34,38 +37,42 @@ export interface HomeworkBadge {
 }
 
 /** Due badge for work still to do; null once handed in. Neutral means "just show the date". */
-export const dueBadge = (item: HomeworkItem, now: Date): HomeworkBadge | null => {
+export const dueBadge = (item: HomeworkItem, now: Date, t: TFunction = defaultT, locale: Locale = 'en'): HomeworkBadge | null => {
   if (isDone(item)) return null;
   const days = daysFromToday(item.dueDate, now);
-  if (item.status === 'overdue' || (days !== null && days < 0)) return { label: 'Overdue', tone: 'bad' };
-  if (days === null) return { label: 'No due date', tone: 'neutral' };
-  if (days === 0) return { label: 'Due today', tone: 'warn' };
-  if (days === 1) return { label: 'Due tomorrow', tone: 'warn' };
-  return { label: `Due ${dayMonth(item.dueDate) ?? item.dueDate}`, tone: 'neutral' };
+  if (item.status === 'overdue' || (days !== null && days < 0)) return { label: t('learn.homework.overdue'), tone: 'bad' };
+  if (days === null) return { label: t('learn.homework.noDueDate'), tone: 'neutral' };
+  if (days === 0) return { label: t('learn.homework.dueToday'), tone: 'warn' };
+  if (days === 1) return { label: t('learn.homework.dueTomorrow'), tone: 'warn' };
+  return { label: t('learn.homework.dueOn', { date: dayMonth(item.dueDate, locale) ?? item.dueDate ?? '' }), tone: 'neutral' };
 };
 
 /** Status badge for work that has been handed in. */
-export const doneBadge = (item: HomeworkItem): HomeworkBadge | null => {
+export const doneBadge = (item: HomeworkItem, t: TFunction = defaultT): HomeworkBadge | null => {
   if (item.status === 'graded') {
-    if (item.marks === null) return { label: 'Marked', tone: 'good' };
-    return { label: item.maxMarks !== null ? `Marked, ${item.marks} of ${item.maxMarks}` : `Marked, ${item.marks}`, tone: 'good' };
+    if (item.marks === null) return { label: t('learn.homework.marked'), tone: 'good' };
+    return {
+      label: item.maxMarks !== null ? t('learn.homework.markedOutOf', { marks: item.marks, max: item.maxMarks }) : t('learn.homework.markedMarks', { marks: item.marks }),
+      tone: 'good',
+    };
   }
-  if (item.status === 'late') return { label: 'Handed in late', tone: 'warn' };
-  if (item.status === 'submitted') return { label: 'Handed in', tone: 'good' };
+  if (item.status === 'late') return { label: t('learn.homework.handedInLate'), tone: 'warn' };
+  if (item.status === 'submitted') return { label: t('learn.homework.handedIn'), tone: 'good' };
   return null;
 };
 
-export const feedbackLine = (item: HomeworkItem): string | null => (item.feedback?.trim() ? `Teacher's note: ${item.feedback.trim()}` : null);
+export const feedbackLine = (item: HomeworkItem, t: TFunction = defaultT): string | null =>
+  item.feedback?.trim() ? t('learn.homework.teacherNote', { note: item.feedback.trim() }) : null;
 
 /** "Set by Mrs. Gupta on 3 October". */
-export const setByLine = (item: HomeworkItem): string | null => {
-  const on = dayMonth(item.assignedAt);
-  if (item.teacher && on) return `Set by ${item.teacher} on ${on}`;
-  if (item.teacher) return `Set by ${item.teacher}`;
-  return on ? `Set on ${on}` : null;
+export const setByLine = (item: HomeworkItem, t: TFunction = defaultT, locale: Locale = 'en'): string | null => {
+  const on = dayMonth(item.assignedAt, locale);
+  if (item.teacher && on) return t('learn.homework.setByOn', { teacher: item.teacher, date: on });
+  if (item.teacher) return t('learn.homework.setBy', { teacher: item.teacher });
+  return on ? t('learn.homework.setOn', { date: on }) : null;
 };
 
-export const homeworkSubtitle = (name: string, counts: Record<HomeworkFilter, number>): string => {
+export const homeworkSubtitle = (name: string, counts: Record<HomeworkFilter, number>, t: TFunction = defaultT): string => {
   if (counts.all === 0) return name;
-  return counts.todo === 0 ? `${name}, all done` : `${name}, ${counts.todo} to do`;
+  return counts.todo === 0 ? t('learn.homework.subtitleAllDone', { name }) : t('learn.homework.subtitleTodo', { name, count: counts.todo });
 };

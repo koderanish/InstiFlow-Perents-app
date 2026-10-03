@@ -1,3 +1,5 @@
+import { defaultT, type TFunction } from '@/i18n/translate';
+
 import type { Tone } from './status-copy';
 import type { ExamResult, SubjectResult } from '@/types/parent';
 
@@ -22,21 +24,21 @@ export interface ResultBadge {
 }
 
 /** "Passed, grade A"; null when the school gave neither a verdict nor a grade. */
-export const resultBadge = (result: ExamResult): ResultBadge | null => {
+export const resultBadge = (result: ExamResult, t: TFunction = defaultT): ResultBadge | null => {
   const grade = result.grade?.trim();
-  if (result.passed === true) return { label: grade ? `Passed, grade ${grade}` : 'Passed', tone: 'good' };
-  if (result.passed === false) return { label: grade ? `Needs support, grade ${grade}` : 'Needs support', tone: 'warn' };
-  return grade ? { label: `Grade ${grade}`, tone: 'neutral' } : null;
+  if (result.passed === true) return { label: grade ? t('learn.results.passedGrade', { grade }) : t('learn.results.passed'), tone: 'good' };
+  if (result.passed === false) return { label: grade ? t('learn.results.needsSupportGrade', { grade }) : t('learn.results.needsSupport'), tone: 'warn' };
+  return grade ? { label: t('learn.results.grade', { grade }), tone: 'neutral' } : null;
 };
 
-const subjectsLabel = (count: number): string => `${count} ${count === 1 ? 'subject' : 'subjects'}`;
-
 /** "320 of 400 marks across 4 subjects". */
-export const marksSummary = (result: ExamResult): string => {
+export const marksSummary = (result: ExamResult, t: TFunction = defaultT): string => {
   const count = result.subjects.length;
-  if (result.totalMarks === null || result.maxTotal === null) return count > 0 ? subjectsLabel(count) : 'Marks not added yet';
-  const across = count > 0 ? ` across ${subjectsLabel(count)}` : '';
-  return `${formatMarks(result.totalMarks)} of ${formatMarks(result.maxTotal)} marks${across}`;
+  const subjects = t('learn.results.subjects', { count });
+  if (result.totalMarks === null || result.maxTotal === null) return count > 0 ? subjects : t('learn.results.marksNotAdded');
+  const marks = formatMarks(result.totalMarks);
+  const max = formatMarks(result.maxTotal);
+  return count > 0 ? t('learn.results.marksOfAcross', { marks, max, subjects }) : t('learn.results.marksOf', { marks, max });
 };
 
 /** Share of full marks, 0 to 1. Null when it cannot be worked out. */
@@ -46,10 +48,10 @@ export const subjectRatio = (subject: SubjectResult): number | null => {
 };
 
 /** "Each subject is marked out of 100."; null when papers differ. */
-export const scaleNote = (subjects: SubjectResult[]): string | null => {
+export const scaleNote = (subjects: SubjectResult[], t: TFunction = defaultT): string | null => {
   const maxes = [...new Set(subjects.map((s) => s.maxMarks).filter((m): m is number => m !== null))];
   if (maxes.length !== 1) return null;
-  return `Each subject is marked out of ${formatMarks(maxes[0])}.`;
+  return t('learn.results.scaleNote', { max: formatMarks(maxes[0]) });
 };
 
 export interface ReportCardTextInput {
@@ -60,23 +62,23 @@ export interface ReportCardTextInput {
 }
 
 /** Plain-text report card for the system share sheet. */
-export const reportCardText = ({ schoolName, studentName, className, result }: ReportCardTextInput): string => {
-  const lines = [schoolName, `Report card: ${result.name}`, [studentName, className].filter(Boolean).join(', '), ''];
+export const reportCardText = ({ schoolName, studentName, className, result }: ReportCardTextInput, t: TFunction = defaultT): string => {
+  const lines = [schoolName, t('learn.results.shareTitle', { name: result.name }), [studentName, className].filter(Boolean).join(', '), ''];
   for (const s of result.subjects) {
     const marks =
-      s.marks === null ? 'not marked' : s.maxMarks !== null ? `${formatMarks(s.marks)}/${formatMarks(s.maxMarks)}` : formatMarks(s.marks);
+      s.marks === null ? t('learn.results.notMarked') : s.maxMarks !== null ? `${formatMarks(s.marks)}/${formatMarks(s.maxMarks)}` : formatMarks(s.marks);
     lines.push(`${s.name}: ${marks}${s.grade ? ` (${s.grade})` : ''}`);
   }
   lines.push('');
   const total = result.totalMarks !== null && result.maxTotal !== null ? `${formatMarks(result.totalMarks)}/${formatMarks(result.maxTotal)}` : null;
   const percent = resultPercent(result);
   const summary = [
-    total ? `Total ${total}` : null,
+    total ? t('learn.results.total', { total }) : null,
     percent !== null ? percentLabel(percent) : null,
-    result.grade ? `Grade ${result.grade}` : null,
-    result.passed === true ? 'Passed' : null,
+    result.grade ? t('learn.results.grade', { grade: result.grade }) : null,
+    result.passed === true ? t('learn.results.passed') : null,
   ].filter((p): p is string => !!p);
   if (summary.length > 0) lines.push(summary.join(', '));
-  if (result.remarks?.trim()) lines.push(`Remarks: ${result.remarks.trim()}`);
+  if (result.remarks?.trim()) lines.push(t('learn.results.remarks', { remarks: result.remarks.trim() }));
   return lines.join('\n');
 };
