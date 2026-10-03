@@ -221,7 +221,7 @@ export const account = {
   'account.password.strength.strong': 'Strong',
   'account.password.strength.none': 'none',
 
-  'account.login.headline': 'Your child's school day, in your pocket',
+  'account.login.headline': "Your child's school day, in your pocket",
   'account.login.tagline': 'Attendance, fees, homework and the school office, all in one place.',
   'account.login.featAttendance': 'Attendance',
   'account.login.featFees': 'Fees',
