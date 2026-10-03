@@ -1,8 +1,8 @@
 {
-  "name": "Sample Public School",
-  "shortName": "SP",
-  "schoolCode": "SAMPLE",
+  "name": "Greenfield International School",
+  "shortName": "GIS",
+  "schoolCode": "GIS",
   "accent": "#FF4F2E",
-  "slug": "sample-public-school",
-  "bundleId": "com.instiflow.parents.sample"
+  "slug": "greenfield-international-school",
+  "bundleId": "com.instiflow.parents.greenfield"
 }
