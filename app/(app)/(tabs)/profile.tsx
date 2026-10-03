@@ -4,7 +4,6 @@ import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
 import { AppearancePicker } from '@/components/account/appearance-picker';
-import { BackButton } from '@/components/account/back-button';
 import { Avatar, DetailCard, Section } from '@/components/account/bits';
 import { PoweredBy } from '@/components/account/brand';
 import { InsetList, Tray, WashCard } from '@/components/account/surfaces';
@@ -37,7 +36,7 @@ export default function ProfileScreen() {
   const languageName = language ? LOCALE_NAMES[language] : t('account.language.phoneNamed', { language: LOCALE_NAMES[detectLocale()] });
 
   return (
-    <CollapsingScreen title={t('account.profile.title')} leading={<BackButton />} refreshing={isRefetching} onRefresh={() => void refetch()}>
+    <CollapsingScreen title={t('account.profile.title')} refreshing={isRefetching} onRefresh={() => void refetch()}>
       <Reveal index={0}>
         <WashCard padding={20}>
           <View style={styles.who}>

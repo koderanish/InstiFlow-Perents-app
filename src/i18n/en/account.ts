@@ -19,6 +19,7 @@ export const account = {
   'account.today.loadingDay': "Loading {name}'s day",
   'account.today.noClass': 'Class not assigned',
   'account.today.profile': 'Your profile',
+  'account.today.notifications': 'Notifications',
 
   'account.switcher.title': 'Choose a child',
   'account.switcher.open': 'Showing {name}. Change child',

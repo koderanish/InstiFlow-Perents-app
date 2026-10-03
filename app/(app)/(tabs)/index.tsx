@@ -1,3 +1,4 @@
+import { Feather } from '@expo/vector-icons';
 import { Link } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -14,12 +15,12 @@ import { SchoolMark } from '@/components/account/brand';
 import { useSchool } from '@/branding';
 import { useChildren, useToday } from '@/features/parent/hooks';
 import { useLocale, useT } from '@/i18n';
-import { firstName, greeting, initials } from '@/lib/format';
+import { firstName, greeting } from '@/lib/format';
 import { attendanceHero, busLine, diaryLine, feesLine } from '@/lib/status-copy';
 import { PressableScale } from '@/motion/pressable-scale';
 import { Reveal } from '@/motion/reveal';
 import { useAuthStore } from '@/stores/auth-store';
-import { fonts, useStyles, type Theme } from '@/theme';
+import { fonts, useStyles, useTheme, type Theme } from '@/theme';
 import type { ParentChild } from '@/types/parent';
 
 /**
@@ -94,6 +95,7 @@ export default function TodayScreen() {
   const styles = useStyles(createStyles);
   const t = useT();
   const school = useSchool();
+  const { colors } = useTheme();
   const user = useAuthStore((s) => s.user);
   const { refetch } = useChildren();
   return (
@@ -101,14 +103,14 @@ export default function TodayScreen() {
       <Reveal index={0}>
         <View style={styles.header}>
           <View style={styles.school}>
-            <SchoolMark size={32} />
-            <AppText variant="caption" numberOfLines={1} style={{ fontFamily: fonts.medium, flexShrink: 1 }}>
+            <SchoolMark size={48} />
+            <AppText variant="body" numberOfLines={2} style={{ fontFamily: fonts.bold, fontSize: 17, lineHeight: 22, flexShrink: 1 }}>
               {school.name}
             </AppText>
           </View>
-          <Link href="/(app)/profile" asChild>
-            <PressableScale accessibilityRole="button" accessibilityLabel={t('account.today.profile')} style={styles.avatar}>
-              <AppText style={{ fontFamily: fonts.bold, fontSize: 14 }}>{initials(user?.full_name ?? '')}</AppText>
+          <Link href="/(app)/(tabs)/inbox" asChild>
+            <PressableScale accessibilityRole="button" accessibilityLabel={t('account.today.notifications')} style={styles.bell}>
+              <Feather name="bell" size={20} color={colors.ink} />
             </PressableScale>
           </Link>
         </View>
@@ -127,6 +129,6 @@ export default function TodayScreen() {
 const createStyles = ({ colors }: Theme) =>
   StyleSheet.create({
     header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 },
-    school: { flexDirection: 'row', alignItems: 'center', gap: 10, flexShrink: 1 },
-    avatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
+    school: { flexDirection: 'row', alignItems: 'center', gap: 12, flexShrink: 1 },
+    bell: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border, alignItems: 'center', justifyContent: 'center' },
   });
