@@ -48,7 +48,8 @@ export default function TabsLayout() {
       <Tabs.Screen name="index" options={{ title: t('tab.today'), tabBarIcon: icon('home') }} />
       <Tabs.Screen name="progress" options={{ title: t('tab.progress'), tabBarIcon: icon('bar-chart-2') }} />
       <Tabs.Screen name="fees" options={{ title: t('tab.fees'), tabBarIcon: icon('credit-card') }} />
-      <Tabs.Screen name="inbox" options={{ title: t('tab.inbox'), tabBarIcon: icon('bell') }} />
+      <Tabs.Screen name="profile" options={{ title: t('tab.profile'), tabBarIcon: icon('user') }} />
+      <Tabs.Screen name="inbox" options={{ href: null }} />
     </Tabs>
   );
 }

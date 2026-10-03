@@ -19,6 +19,7 @@ export const common = {
   'tab.progress': 'Progress',
   'tab.fees': 'Fees',
   'tab.inbox': 'Inbox',
+  'tab.profile': 'Profile',
 
   'greeting.morning': 'Good morning',
   'greeting.afternoon': 'Good afternoon',

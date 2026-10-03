@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { BackButton } from '@/components/account/back-button';
 import { ScrollView, StyleSheet } from 'react-native';
 
 import { NoticeRow } from '@/components/account/notice-row';
@@ -66,6 +67,7 @@ export default function InboxScreen() {
   return (
     <CollapsingScreen
       title={t('tab.inbox')}
+      leading={<BackButton />}
       subtitle={t('account.inbox.from', { school: school.name })}
       refreshing={notices.isRefetching}
       onRefresh={() => {

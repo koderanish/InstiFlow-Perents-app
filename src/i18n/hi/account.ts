@@ -20,6 +20,7 @@ export const accountHi: Record<keyof typeof account, string> = {
   'account.today.loadingDay': '{name} का दिन लोड हो रहा है',
   'account.today.noClass': 'कक्षा तय नहीं हुई है',
   'account.today.profile': 'आपकी प्रोफ़ाइल',
+  'account.today.notifications': 'सूचनाएँ',
 
   'account.switcher.title': 'बच्चा चुनें',
   'account.switcher.open': '{name} की जानकारी दिख रही है। बच्चा बदलें',

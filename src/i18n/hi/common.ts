@@ -20,6 +20,7 @@ export const commonHi: Record<keyof typeof common, string> = {
   'tab.progress': 'प्रगति',
   'tab.fees': 'फीस',
   'tab.inbox': 'सूचनाएँ',
+  'tab.profile': 'प्रोफ़ाइल',
 
   'greeting.morning': 'सुप्रभात',
   'greeting.afternoon': 'नमस्कार',
