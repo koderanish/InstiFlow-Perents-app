@@ -64,7 +64,7 @@ function TimetableBody({ child, all }: { child: ParentChild; all: ParentChild[] 
   const today = weekdayIndex(now);
   const selected = picked ?? defaultDayIndex(now);
 
-  const byDay = useMemo(() => groupByDay(q.data?.slots ?? []), [q.data]);
+  const byDay = useMemo(() => groupByDay(q.data ?? []), [q.data]);
   const options = useMemo<SegmentOption<string>[]>(
     () => SCHOOL_DAYS.map((d) => ({ key: String(d.index), label: d.short, spoken: d.index === today ? `${d.long}, today` : d.long, dot: d.index === today })),
     [today],
@@ -73,7 +73,7 @@ function TimetableBody({ child, all }: { child: ParentChild; all: ParentChild[] 
   if (q.isLoading) return <Loading />;
   if (q.isError || !q.data) return <ErrorState message={friendlyError(q.error)} onRetry={() => void q.refetch()} />;
 
-  if (q.data.slots.length === 0) {
+  if (q.data.length === 0) {
     return (
       <>
         <ChildChips items={all} selectedId={child.id} />
