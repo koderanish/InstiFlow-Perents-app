@@ -4,7 +4,7 @@ export { darkPalette, lightPalette, makeShadows, mix } from './palette';
 export type { Palette, Shadows } from './palette';
 export { buildTheme, resolveScheme, ThemeProvider, useTheme } from './provider';
 export type { Theme } from './provider';
-export { useStyles } from './use-styles';
+export { useStyles, useThemed } from './use-styles';
 
 /**
  * @deprecated Light colours only. Use `useTheme().colors` (or `useStyles`) so the screen follows dark mode.

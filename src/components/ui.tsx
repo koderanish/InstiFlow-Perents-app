@@ -8,7 +8,7 @@ import { IconBadge } from '@/components/icon-badge';
 import { PressableScale } from '@/motion/pressable-scale';
 import { SkeletonCard } from '@/motion/skeleton';
 import { useT } from '@/i18n';
-import { fonts, radius, useStyles, useTheme, type Theme } from '@/theme';
+import { fonts, radius, useStyles, useTheme, useThemed, type Theme } from '@/theme';
 import type { Tone } from '@/lib/status-copy';
 
 type Variant = 'title' | 'heading' | 'body' | 'caption' | 'label';
@@ -81,7 +81,7 @@ export const toneColors = ({ colors }: Theme): Record<Tone, { bg: string; fg: st
 
 export function Chip({ label, tone = 'neutral' }: { label: string; tone?: Tone }) {
   const styles = useStyles(createStyles);
-  const c = useStyles(toneColors)[tone];
+  const c = useThemed(toneColors)[tone];
   return (
     <View style={[styles.chip, { backgroundColor: c.bg }]}>
       <View style={[styles.chipDot, { backgroundColor: c.fg }]} />
