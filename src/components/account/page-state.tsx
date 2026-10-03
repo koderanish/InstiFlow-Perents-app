@@ -1,23 +1,26 @@
 import type { UseQueryResult } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 
 import { AppText, EmptyState, ErrorState } from '@/components/ui';
 import { useChildren } from '@/features/parent/hooks';
 import { friendlyError, isOffline } from '@/lib/errors';
 import { clock } from '@/lib/format';
+import { enterRise, exitFade } from '@/motion/presets';
+import { Skeleton } from '@/motion/skeleton';
 import { colors, fonts } from '@/theme';
 
-/** Placeholder blocks while the first load runs (matches the approved loading board). */
+/** Placeholder blocks while the first load runs (matches the approved loading board). They breathe, they do not spin. */
 export function SkeletonCards({ rows = 3 }: { rows?: number }) {
   return (
     <View accessible accessibilityLabel="Loading" accessibilityState={{ busy: true }} style={styles.skeletonWrap}>
-      <View style={[styles.bar, { width: '55%', height: 28, borderRadius: 10 }]} />
+      <Skeleton width="55%" height={28} rounded={10} />
       {Array.from({ length: rows }, (_, i) => (
         <View key={i} style={styles.skeletonCard}>
-          <View style={[styles.bar, { width: '38%', height: 16 }]} />
-          <View style={[styles.bar, { width: '82%', height: 12, marginTop: 10 }]} />
-          <View style={[styles.bar, { width: '64%', height: 12, marginTop: 8 }]} />
+          <Skeleton width="38%" height={16} />
+          <Skeleton width="82%" height={12} style={{ marginTop: 10 }} />
+          <Skeleton width="64%" height={12} style={{ marginTop: 8 }} />
         </View>
       ))}
     </View>
@@ -30,10 +33,10 @@ export function StaleBanner({ error, savedAt }: { error: unknown; savedAt: numbe
   const lead = isOffline(error) ? 'No internet.' : 'Could not refresh.';
   const text = when ? `${lead} Showing what we saved at ${when}.` : `${lead} Showing what we saved.`;
   return (
-    <View accessibilityRole="alert" style={styles.banner}>
+    <Animated.View accessibilityRole="alert" entering={enterRise(0)} exiting={exitFade} style={styles.banner}>
       <View style={styles.bannerDot} />
       <AppText style={styles.bannerText}>{text}</AppText>
-    </View>
+    </Animated.View>
   );
 }
 
@@ -86,7 +89,6 @@ export function useChildPage() {
 const styles = StyleSheet.create({
   skeletonWrap: { gap: 16 },
   skeletonCard: { backgroundColor: colors.card, borderRadius: 24, padding: 20 },
-  bar: { backgroundColor: colors.border, borderRadius: 8 },
   banner: { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: colors.warnBg, borderRadius: 18, paddingHorizontal: 14, paddingVertical: 10 },
   bannerDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.warnFg },
   bannerText: { flex: 1, fontFamily: fonts.semibold, fontSize: 13, color: colors.warnFg },

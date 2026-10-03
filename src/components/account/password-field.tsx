@@ -1,11 +1,12 @@
-import { Feather } from '@expo/vector-icons';
 import { useState, type Ref } from 'react';
-import { Pressable, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
+import { StyleSheet, type TextInput, type TextInputProps } from 'react-native';
 
-import { AppText } from '@/components/ui';
-import { colors, fonts } from '@/theme';
+import { IconSwap } from '@/components/account/icon-swap';
+import { TextField } from '@/components/account/text-field';
+import { PressableScale } from '@/motion/pressable-scale';
+import { colors } from '@/theme';
 
-/** Password input with a show/hide button that is at least 44pt wide and tall. */
+/** Password input with a show/hide button (52 by 56) whose icon cross-fades. */
 export function PasswordField({
   label,
   value,
@@ -14,6 +15,7 @@ export function PasswordField({
   returnKeyType,
   onSubmitEditing,
   inputRef,
+  error,
 }: {
   label: string;
   value: string;
@@ -22,40 +24,36 @@ export function PasswordField({
   returnKeyType?: TextInputProps['returnKeyType'];
   onSubmitEditing?: () => void;
   inputRef?: Ref<TextInput>;
+  error?: boolean;
 }) {
   const [shown, setShown] = useState(false);
   return (
-    <View style={{ gap: 8 }}>
-      <AppText variant="label">{label}</AppText>
-      <View style={styles.box}>
-        <TextInput
-          ref={inputRef}
-          accessibilityLabel={label}
-          autoCapitalize="none"
-          autoCorrect={false}
-          autoComplete={autoComplete}
-          returnKeyType={returnKeyType}
-          onSubmitEditing={onSubmitEditing}
-          secureTextEntry={!shown}
-          style={styles.input}
-          value={value}
-          onChangeText={onChangeText}
-        />
-        <Pressable
+    <TextField
+      label={label}
+      error={error}
+      inputRef={inputRef}
+      autoCapitalize="none"
+      autoCorrect={false}
+      autoComplete={autoComplete}
+      returnKeyType={returnKeyType}
+      onSubmitEditing={onSubmitEditing}
+      secureTextEntry={!shown}
+      value={value}
+      onChangeText={onChangeText}
+      right={
+        <PressableScale
           accessibilityRole="button"
           accessibilityLabel={shown ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
           onPress={() => setShown((s) => !s)}
           style={styles.eye}
         >
-          <Feather name={shown ? 'eye-off' : 'eye'} size={20} color={colors.muted} />
-        </Pressable>
-      </View>
-    </View>
+          <IconSwap active={shown} from="eye" to="eye-off" size={20} fromColor={colors.muted} toColor={colors.muted} />
+        </PressableScale>
+      }
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  box: { flexDirection: 'row', alignItems: 'center', height: 56, borderRadius: 16, borderWidth: 1, borderColor: '#E8E0D9', backgroundColor: colors.card },
-  input: { flex: 1, height: 56, paddingLeft: 18, fontFamily: fonts.body, fontSize: 16, color: colors.ink },
   eye: { width: 52, height: 56, alignItems: 'center', justifyContent: 'center' },
 });

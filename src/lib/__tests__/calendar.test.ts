@@ -1,4 +1,4 @@
-import { monthGrid, monthLabel, shiftMonth, statusColor } from '../calendar';
+import { monthGrid, monthLabel, shiftMonth, statusColor, statusTint } from '../calendar';
 
 describe('calendar', () => {
   it('labels months', () => {
@@ -23,5 +23,11 @@ describe('calendar', () => {
   it('colours statuses', () => {
     expect(statusColor('present')).toBe('#1F9D63');
     expect(statusColor('unknown')).toBe('transparent');
+  });
+
+  it('tints day cells softly', () => {
+    expect(statusTint('present')).toBe('#1F9D6326');
+    expect(statusTint(null)).toBe('transparent');
+    expect(statusTint('unknown')).toBe('transparent');
   });
 });

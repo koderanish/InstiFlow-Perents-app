@@ -1,34 +1,29 @@
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet } from 'react-native';
 
 import { NoticeRow } from '@/components/account/notice-row';
 import { QueryBoundary, useChildPage } from '@/components/account/page-state';
+import { SelectChip } from '@/components/account/select-chip';
 import { ChildChips } from '@/components/child-chips';
 import { AppText, ListCard, Screen } from '@/components/ui';
 import { SCHOOL } from '@/config/school';
 import { useNotices } from '@/features/parent/hooks';
 import { ALL_CATEGORIES, filterNotices, noticeCategories } from '@/lib/notices';
-import { colors, fonts } from '@/theme';
+import { Reveal } from '@/motion/reveal';
 import type { Notice } from '@/types/parent';
 
 function CategoryFilter({ options, value, onChange }: { options: string[]; value: string; onChange: (next: string) => void }) {
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filters} style={styles.filterScroll}>
-      {[ALL_CATEGORIES, ...options].map((label) => {
-        const on = label === value;
-        return (
-          <Pressable
-            key={label}
-            accessibilityRole="button"
-            accessibilityState={{ selected: on }}
-            accessibilityLabel={label === ALL_CATEGORIES ? 'Show all notices' : `Show ${label} notices`}
-            onPress={() => onChange(label)}
-            style={[styles.filter, on ? { backgroundColor: colors.accentTint } : { borderWidth: 1, borderColor: colors.border }]}
-          >
-            <AppText style={{ fontFamily: on ? fonts.semibold : fonts.medium, fontSize: 15, color: on ? colors.ink : colors.muted }}>{label}</AppText>
-          </Pressable>
-        );
-      })}
+      {[ALL_CATEGORIES, ...options].map((label) => (
+        <SelectChip
+          key={label}
+          label={label}
+          selected={label === value}
+          accessibilityLabel={label === ALL_CATEGORIES ? 'Show all notices' : `Show ${label} notices`}
+          onPress={() => onChange(label)}
+        />
+      ))}
     </ScrollView>
   );
 }
@@ -41,10 +36,16 @@ function NoticeList({ notices }: { notices: Notice[] }) {
   const shown = filterNotices(notices, active);
   return (
     <>
-      {options.length > 1 ? <CategoryFilter options={options} value={active} onChange={setCategory} /> : null}
+      {options.length > 1 ? (
+        <Reveal index={0}>
+          <CategoryFilter options={options} value={active} onChange={setCategory} />
+        </Reveal>
+      ) : null}
       <ListCard>
         {shown.map((n, i) => (
-          <NoticeRow key={n.id} notice={n} last={i === shown.length - 1} />
+          <Reveal key={n.id} index={i + 1}>
+            <NoticeRow notice={n} last={i === shown.length - 1} />
+          </Reveal>
         ))}
       </ListCard>
     </>
@@ -62,12 +63,12 @@ export default function InboxScreen() {
         void notices.refetch();
       }}
     >
-      <View>
+      <Reveal index={0}>
         <AppText variant="title">Inbox</AppText>
-        <AppText variant="caption" style={{ marginTop: 4 }}>
+        <AppText variant="caption" numberOfLines={1} style={{ marginTop: 4 }}>
           Messages from {SCHOOL.name}
         </AppText>
-      </View>
+      </Reveal>
       {page.child ? (
         <>
           <ChildChips items={page.all} selectedId={page.child.id} />
@@ -85,5 +86,4 @@ export default function InboxScreen() {
 const styles = StyleSheet.create({
   filterScroll: { marginHorizontal: -20 },
   filters: { gap: 8, paddingHorizontal: 20 },
-  filter: { minHeight: 44, paddingHorizontal: 16, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
 });

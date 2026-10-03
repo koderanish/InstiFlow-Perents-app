@@ -9,7 +9,9 @@ import {
 import { Stack, useRouter, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { StyleSheet, View } from 'react-native';
+import Animated, { FadeOut, ReduceMotion } from 'react-native-reanimated';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { BrandSplash } from '@/components/account/brand';
@@ -19,6 +21,10 @@ import { usePrefsStore } from '@/stores/prefs-store';
 import { colors } from '@/theme';
 
 void SplashScreen.preventAutoHideAsync();
+
+/** The branded splash stays up at least this long, so the logo can finish settling in. */
+const SPLASH_MIN_MS = 700;
+const splashOut = FadeOut.duration(320).reduceMotion(ReduceMotion.System);
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -35,6 +41,12 @@ export default function RootLayout() {
   const restorePrefs = usePrefsStore((s) => s.restore);
   const segments = useSegments();
   const router = useRouter();
+  const [splashGone, setSplashGone] = useState(false);
+  const startedAt = useRef(0);
+
+  useEffect(() => {
+    startedAt.current = Date.now();
+  }, []);
 
   useEffect(() => {
     void restoreSession();
@@ -73,15 +85,37 @@ export default function RootLayout() {
     if (status === 'unauthenticated') queryClient.clear();
   }, [status]);
 
+  // Once everything is ready the app mounts underneath the splash, which then fades away.
+  // The splash is the same element throughout, so its entrance never replays.
+  useEffect(() => {
+    if (!ready) return undefined;
+    const wait = Math.max(150, SPLASH_MIN_MS - (Date.now() - startedAt.current));
+    const timer = setTimeout(() => setSplashGone(true), wait);
+    return () => clearTimeout(timer);
+  }, [ready]);
+
   if (!fontsLoaded) return null;
-  if (!ready) return <BrandSplash />;
 
   return (
-    <SafeAreaProvider>
-      <AppProviders>
-        <StatusBar style="dark" />
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }} />
-      </AppProviders>
-    </SafeAreaProvider>
+    <View style={styles.root}>
+      {ready ? (
+        <SafeAreaProvider>
+          <AppProviders>
+            <StatusBar style="dark" />
+            <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }} />
+          </AppProviders>
+        </SafeAreaProvider>
+      ) : null}
+      {splashGone ? null : (
+        <Animated.View exiting={splashOut} style={styles.splash}>
+          <BrandSplash />
+        </Animated.View>
+      )}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1, backgroundColor: colors.bg },
+  splash: { ...StyleSheet.absoluteFill, backgroundColor: colors.bg, pointerEvents: 'none' },
+});

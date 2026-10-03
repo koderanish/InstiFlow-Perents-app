@@ -1,8 +1,9 @@
 import { Feather } from '@expo/vector-icons';
 import type { PropsWithChildren } from 'react';
-import { Alert, Linking, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Alert, Linking, StyleSheet, Text, View } from 'react-native';
 
 import { AppText } from '@/components/ui';
+import { PressableScale } from '@/motion/pressable-scale';
 import { colors, fonts, radius, shadow } from '@/theme';
 
 /** Opens a tel:, mailto: or web link. Tells the parent plainly if the phone cannot. */
@@ -63,7 +64,7 @@ export function DetailCard({ items }: { items: DetailItem[] }) {
           <View key={`${item.label}-${i}`} style={[styles.detailRow, !last && styles.divider]}>
             <AppText style={[styles.detailLabel, item.bold && { fontFamily: fonts.bold, color: colors.ink }]}>{item.label}</AppText>
             {item.onPress ? (
-              <Pressable
+              <PressableScale
                 accessibilityRole="link"
                 accessibilityLabel={`${item.label}: ${item.value}`}
                 accessibilityHint={item.hint}
@@ -72,7 +73,7 @@ export function DetailCard({ items }: { items: DetailItem[] }) {
                 style={styles.linkValue}
               >
                 {value}
-              </Pressable>
+              </PressableScale>
             ) : (
               value
             )}
@@ -95,24 +96,20 @@ export function Avatar({ name, size = 44 }: { name: string; size?: number }) {
 /** Round call button, 44pt, used beside a phone number. */
 export function CallButton({ label, onPress }: { label: string; onPress: () => void }) {
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={styles.callButton}>
+    <PressableScale accessibilityRole="button" accessibilityLabel={label} haptic="press" onPress={onPress} style={styles.callButton}>
       <Feather name="phone" size={18} color={colors.accentInk} />
-    </Pressable>
+    </PressableScale>
   );
 }
 
 /** Outlined full-width button for the second action on a page. */
 export function SecondaryButton({ label, onPress, disabled }: { label: string; onPress: () => void; disabled?: boolean }) {
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityState={{ disabled: !!disabled }}
-      disabled={disabled}
-      onPress={onPress}
-      style={[styles.secondary, disabled && { opacity: 0.55 }]}
-    >
-      <Text style={styles.secondaryText}>{label}</Text>
-    </Pressable>
+    <PressableScale accessibilityRole="button" accessibilityState={{ disabled: !!disabled }} disabled={disabled} scaleTo={0.97} onPress={onPress} style={styles.secondary}>
+      <Text maxFontSizeMultiplier={1.3} style={styles.secondaryText}>
+        {label}
+      </Text>
+    </PressableScale>
   );
 }
 
@@ -124,6 +121,6 @@ const styles = StyleSheet.create({
   detailValue: { fontFamily: fonts.semibold, fontSize: 15, color: colors.ink, textAlign: 'right', flexShrink: 1 },
   linkValue: { flexShrink: 1, minHeight: 44, justifyContent: 'center' },
   callButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.accentTint, alignItems: 'center', justifyContent: 'center' },
-  secondary: { minHeight: 56, borderRadius: radius.button, borderWidth: 1, borderColor: '#E8E0D9', backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20 },
+  secondary: { minHeight: 56, borderRadius: radius.button, backgroundColor: colors.card, alignItems: 'center', justifyContent: 'center', paddingHorizontal: 20, ...shadow.card },
   secondaryText: { fontFamily: fonts.semibold, fontSize: 16, color: colors.ink },
 });

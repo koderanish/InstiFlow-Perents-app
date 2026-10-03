@@ -3,14 +3,17 @@ import { Share } from 'react-native';
 
 import { DetailCard, Hint, Section, SecondaryButton, type DetailItem } from '@/components/account/bits';
 import { useGoBack } from '@/components/account/nav';
+import { CountUpText, PopIn } from '@/components/account/motion-bits';
 import { QueryBoundary, useChildPage } from '@/components/account/page-state';
-import { AppText, BackHeader, Card, Chip, EmptyState, ListCard, ListRow, Screen } from '@/components/ui';
+import { WashCard } from '@/components/account/surfaces';
+import { AppText, BackHeader, Chip, EmptyState, ListCard, ListRow, Screen } from '@/components/ui';
 import { SCHOOL } from '@/config/school';
 import { useInvoice } from '@/features/parent/hooks';
 import { toISODate } from '@/lib/dates';
 import { dayMonth, rupees } from '@/lib/format';
 import { invoiceChip, receiptText } from '@/lib/receipt';
-import { fonts } from '@/theme';
+import { Reveal } from '@/motion/reveal';
+import { colors, fonts } from '@/theme';
 import type { InvoiceDetail, ParentChild, Payment } from '@/types/parent';
 
 const modeText = (mode: string | null): string => (mode ? mode.replace(/[_-]+/g, ' ').toUpperCase() : '');
@@ -49,30 +52,50 @@ function ReceiptBody({ inv, child }: { inv: InvoiceDetail; child: ParentChild })
 
   return (
     <>
-      <Card hero>
-        <Chip label={chip.label} tone={chip.tone} />
-        <AppText style={{ fontFamily: fonts.display, fontSize: 52, lineHeight: 56, marginTop: 14 }}>{rupees(paid ? inv.total : inv.balance)}</AppText>
-        <AppText variant="caption" style={{ fontSize: 15, marginTop: 6 }}>
-          {paid ? paidLine(inv) : `Still to pay, due ${dayMonth(inv.dueDate) ?? inv.dueDate}`}
-        </AppText>
-      </Card>
-      <DetailCard items={rows} />
+      <Reveal index={0}>
+        <WashCard tint={paid ? colors.goodBg : chip.tone === 'bad' ? colors.badBg : colors.accentTint}>
+          <PopIn delay={200}>
+            <Chip label={chip.label} tone={chip.tone} />
+          </PopIn>
+          <CountUpText
+            value={paid ? inv.total : inv.balance}
+            format={rupees}
+            style={{ fontFamily: fonts.display, fontSize: 52, lineHeight: 56, marginTop: 14 }}
+          />
+          <AppText variant="caption" style={{ fontSize: 15, marginTop: 6 }}>
+            {paid ? paidLine(inv) : `Still to pay, due ${dayMonth(inv.dueDate) ?? inv.dueDate}`}
+          </AppText>
+        </WashCard>
+      </Reveal>
+      <Reveal index={1}>
+        <DetailCard items={rows} />
+      </Reveal>
       {inv.payments.length > 0 ? (
-        <Section title="Payments">
-          <ListCard>
-            {inv.payments.map((p, i) => (
-              <ListRow
-                key={p.id}
-                title={`${rupees(p.amount)} on ${dayMonth(p.paidOn) ?? p.paidOn}`}
-                subtitle={paymentSubtitle(p) || undefined}
-                last={i === inv.payments.length - 1}
-              />
-            ))}
-          </ListCard>
-        </Section>
+        <Reveal index={2}>
+          <Section title="Payments">
+            <ListCard>
+              {inv.payments.map((p, i) => (
+                <ListRow
+                  key={p.id}
+                  title={`${rupees(p.amount)} on ${dayMonth(p.paidOn) ?? p.paidOn}`}
+                  subtitle={paymentSubtitle(p) || undefined}
+                  icon="credit-card"
+                  dot="good"
+                  last={i === inv.payments.length - 1}
+                />
+              ))}
+            </ListCard>
+          </Section>
+        </Reveal>
       ) : null}
-      {!paid ? <Hint>Paying online is not available in this app yet. Please pay the balance at the school office.</Hint> : null}
-      <SecondaryButton label="Share receipt" onPress={() => void share()} />
+      {!paid ? (
+        <Reveal index={3}>
+          <Hint>Paying online is not available in this app yet. Please pay the balance at the school office.</Hint>
+        </Reveal>
+      ) : null}
+      <Reveal index={4}>
+        <SecondaryButton label="Share receipt" onPress={() => void share()} />
+      </Reveal>
     </>
   );
 }

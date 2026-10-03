@@ -1,9 +1,12 @@
 import { Link, type Href } from 'expo-router';
 import type { PropsWithChildren, ReactNode } from 'react';
-import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
+import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, Text, View, type StyleProp, type TextProps, type TextStyle, type ViewStyle } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Feather } from '@expo/vector-icons';
 
+import { IconBadge } from '@/components/icon-badge';
+import { PressableScale } from '@/motion/pressable-scale';
+import { SkeletonCard } from '@/motion/skeleton';
 import { colors, fonts, radius, shadow } from '@/theme';
 import type { Tone } from '@/lib/status-copy';
 
@@ -17,12 +20,19 @@ const textStyles: Record<Variant, TextStyle> = {
   label: { fontFamily: fonts.semibold, fontSize: 14, color: colors.ink },
 };
 
-export function AppText({ variant = 'body', style, ...rest }: TextProps & { variant?: Variant }) {
-  return <Text {...rest} style={[textStyles[variant], style]} />;
+/** `tabular` keeps digits the same width so changing numbers (marks, ₹, counts) do not jiggle. */
+export function AppText({ variant = 'body', style, tabular, ...rest }: TextProps & { variant?: Variant; tabular?: boolean }) {
+  return <Text {...rest} style={[textStyles[variant], tabular ? tabularStyle : null, style]} />;
 }
 
+const tabularStyle: TextStyle = { fontVariant: ['tabular-nums'] };
+
 export function Display({ children, style }: PropsWithChildren<{ style?: StyleProp<TextStyle> }>) {
-  return <Text style={[{ fontFamily: fonts.display, fontSize: 64, lineHeight: 64, color: colors.ink, letterSpacing: -1 }, style]}>{children}</Text>;
+  return (
+    <Text maxFontSizeMultiplier={1.2} style={[{ fontFamily: fonts.display, fontSize: 64, lineHeight: 64, color: colors.ink, letterSpacing: -1, fontVariant: ['tabular-nums'] }, style]}>
+      {children}
+    </Text>
+  );
 }
 
 /** Scrolling page on the app background. `tabs` leaves room for the bottom tab bar. */
@@ -82,6 +92,7 @@ export function ListRow({
   subtitle,
   href,
   dot,
+  icon,
   last,
   right,
 }: {
@@ -89,11 +100,14 @@ export function ListRow({
   subtitle?: string;
   href?: Href;
   dot?: Tone;
+  /** Leading icon tile. When set it carries the tone, so the small dot is not drawn. */
+  icon?: React.ComponentProps<typeof Feather>['name'];
   last?: boolean;
   right?: ReactNode;
 }) {
   const inner = (
     <View style={[styles.row, !last && styles.rowDivider]}>
+      {icon ? <IconBadge name={icon} tone={dot ?? 'neutral'} /> : null}
       <View style={{ flex: 1 }}>
         <AppText variant="body" style={{ fontFamily: fonts.semibold }}>
           {title}
@@ -104,7 +118,7 @@ export function ListRow({
           </AppText>
         ) : null}
       </View>
-      {dot ? <View style={[styles.dot, { backgroundColor: dot === 'good' ? colors.goodDot : dot === 'bad' ? colors.badFg : dot === 'warn' ? colors.warnFg : colors.accent }]} /> : null}
+      {dot && !icon ? <View style={[styles.dot, { backgroundColor: dot === 'good' ? colors.goodDot : dot === 'bad' ? colors.badFg : dot === 'warn' ? colors.warnFg : colors.accent }]} /> : null}
       {right}
       {href ? <Feather name="chevron-right" size={18} color={colors.faint} /> : null}
     </View>
@@ -112,9 +126,9 @@ export function ListRow({
   if (!href) return inner;
   return (
     <Link href={href} asChild>
-      <Pressable accessibilityRole="button" accessibilityLabel={title}>
+      <PressableScale accessibilityRole="button" accessibilityLabel={title} scaleTo={0.985}>
         {inner}
-      </Pressable>
+      </PressableScale>
     </Link>
   );
 }
@@ -122,18 +136,18 @@ export function ListRow({
 export function PrimaryButton({ label, onPress, loading, disabled }: { label: string; onPress: () => void; loading?: boolean; disabled?: boolean }) {
   const off = disabled || loading;
   return (
-    <Pressable accessibilityRole="button" accessibilityState={{ disabled: !!off, busy: !!loading }} disabled={off} onPress={onPress} style={[styles.button, off && { opacity: 0.55 }]}>
-      {loading ? <ActivityIndicator color={colors.onAccent} /> : <Text style={styles.buttonText}>{label}</Text>}
-    </Pressable>
+    <PressableScale accessibilityRole="button" accessibilityState={{ disabled: !!off, busy: !!loading }} disabled={off} haptic="press" scaleTo={0.97} onPress={onPress} style={styles.button}>
+      {loading ? <ActivityIndicator color={colors.onAccent} /> : <Text maxFontSizeMultiplier={1.3} style={styles.buttonText}>{label}</Text>}
+    </PressableScale>
   );
 }
 
 export function BackHeader({ title, subtitle, onBack }: { title: string; subtitle?: string; onBack: () => void }) {
   return (
     <View style={styles.backHeader}>
-      <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={onBack} style={styles.backButton} hitSlop={8}>
+      <PressableScale accessibilityRole="button" accessibilityLabel="Back" onPress={onBack} style={styles.backButton} hitSlop={8}>
         <Feather name="chevron-left" size={22} color={colors.ink} />
-      </Pressable>
+      </PressableScale>
       <View>
         <AppText variant="title" style={{ fontSize: 26, lineHeight: 29 }}>
           {title}
@@ -144,18 +158,24 @@ export function BackHeader({ title, subtitle, onBack }: { title: string; subtitl
   );
 }
 
+/** Shape-of-the-page placeholder instead of a spinner. `label` is read out by screen readers. */
 export function Loading({ label }: { label?: string }) {
   return (
-    <View style={styles.center}>
-      <ActivityIndicator color={colors.accent} />
-      {label ? <AppText variant="caption" style={{ marginTop: 12 }}>{label}</AppText> : null}
+    <View accessibilityRole="progressbar" accessibilityLabel={label ?? 'Loading'} style={{ gap: 16 }}>
+      <SkeletonCard tall />
+      <SkeletonCard />
     </View>
   );
 }
 
-export function EmptyState({ title, message }: { title: string; message?: string }) {
+export function EmptyState({ title, message, icon }: { title: string; message?: string; icon?: React.ComponentProps<typeof Feather>['name'] }) {
   return (
     <View style={styles.center}>
+      {icon ? (
+        <View style={{ marginBottom: 16 }}>
+          <IconBadge name={icon} size={64} />
+        </View>
+      ) : null}
       <AppText variant="heading" style={{ textAlign: 'center' }}>{title}</AppText>
       {message ? <AppText variant="caption" style={{ textAlign: 'center', marginTop: 6, lineHeight: 21 }}>{message}</AppText> : null}
     </View>

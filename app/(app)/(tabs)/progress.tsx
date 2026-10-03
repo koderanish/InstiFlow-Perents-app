@@ -1,13 +1,15 @@
 import { Link } from 'expo-router';
 import { useMemo } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { StyleSheet, View } from 'react-native';
 
 import { ChildChips } from '@/components/child-chips';
 import { ChildGate } from '@/components/child-gate';
 import { useNow, usePullRefresh } from '@/components/learn/hooks';
-import { LearnSectionTitle, LearnStatBar, LearnStatTile, LearnTitle } from '@/components/learn/learn-parts';
+import { HeroFill, heroShell, LearnSectionTitle, LearnStatBar, LearnStatTile, LearnTitle } from '@/components/learn/learn-parts';
+import { PercentHero } from '@/components/learn/percent-hero';
 import { reportCardHref } from '@/components/learn/routes';
-import { AppText, Card, Chip, Display, EmptyState, ErrorState, ListCard, ListRow, Loading, Screen } from '@/components/ui';
+import { AppText, EmptyState, ErrorState, ListCard, ListRow, Loading, Screen } from '@/components/ui';
 import { useAttendance, useChildren, useExams, useHomework, useResults } from '@/features/parent/hooks';
 import { shortDateParts } from '@/lib/learn-dates';
 import { friendlyError } from '@/lib/errors';
@@ -15,6 +17,8 @@ import { buildExamPlan, nextPaperHeadline } from '@/lib/exams';
 import { firstName } from '@/lib/format';
 import { homeworkCounts } from '@/lib/homework';
 import { formatMarks, marksSummary, percentLabel, resultBadge, resultPercent, scaleNote, subjectRatio } from '@/lib/results';
+import { PressableScale } from '@/motion/pressable-scale';
+import { Reveal } from '@/motion/reveal';
 import { colors, fonts } from '@/theme';
 import type { ParentChild } from '@/types/parent';
 
@@ -51,30 +55,29 @@ function ProgressBody({ child, all }: { child: ParentChild; all: ParentChild[] }
 
       {latest ? (
         <>
-          <Link href={reportCardHref(latest.id)} asChild>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={`${latest.name}: ${percentLabel(percent)}${badge ? `, ${badge.label}` : ''}. Open report card`}
-            >
-              <Card hero>
-                <View style={styles.heroTop}>
-                  <Display style={{ fontSize: 72, lineHeight: 80, letterSpacing: -1.4 }}>{percentLabel(percent)}</Display>
-                  {badge ? <Chip label={badge.label} tone={badge.tone} /> : null}
-                </View>
-                <AppText variant="caption" style={{ fontSize: 15, marginTop: 14 }}>
-                  {marksSummary(latest)}
-                </AppText>
-              </Card>
-            </Pressable>
-          </Link>
+          <Reveal index={0}>
+            <Link href={reportCardHref(latest.id)} asChild>
+              <PressableScale
+                accessibilityRole="button"
+                accessibilityLabel={`${latest.name}: ${percentLabel(percent)}${badge ? `, ${badge.label}` : ''}. Open report card`}
+                scaleTo={0.985}
+                style={heroShell}
+              >
+                <HeroFill>
+                  <PercentHero percent={percent} badge={badge} summary={marksSummary(latest)} hint="Open report card" />
+                </HeroFill>
+              </PressableScale>
+            </Link>
+          </Reveal>
 
           {latest.subjects.length > 0 ? (
-            <>
+            <Reveal index={1} style={{ gap: 12 }}>
               <ListCard>
                 <View style={{ paddingVertical: 6 }}>
                   {latest.subjects.map((s, i) => (
                     <LearnStatBar
                       key={`${s.name}-${i}`}
+                      index={i}
                       label={s.name}
                       valueLabel={formatMarks(s.marks)}
                       ratio={subjectRatio(s)}
@@ -93,23 +96,29 @@ function ProgressBody({ child, all }: { child: ParentChild; all: ParentChild[] }
                   <View style={{ flex: 1 }} />
                 )}
                 <Link href={reportCardHref(latest.id)} asChild>
-                  <Pressable accessibilityRole="link" accessibilityLabel="Open report card" style={styles.linkButton}>
+                  <PressableScale accessibilityRole="link" accessibilityLabel="Open report card" hitSlop={8} style={styles.linkButton}>
                     <AppText style={{ fontFamily: fonts.semibold, fontSize: 14, color: colors.accentInk }}>Report card</AppText>
-                  </Pressable>
+                    <Feather name="arrow-right" size={14} color={colors.accentInk} />
+                  </PressableScale>
                 </Link>
               </View>
-            </>
+            </Reveal>
           ) : null}
         </>
       ) : null}
 
-      <View style={styles.tiles}>
-        <LearnStatTile value={attendancePercent === null ? '—' : `${Math.round(attendancePercent)}%`} label="Attendance" href="/(app)/attendance" />
-        <LearnStatTile value={nextDate ? `${nextDate.day} ${nextDate.month}` : 'None yet'} label="Next exam" href="/(app)/exams" />
-      </View>
+      <Reveal index={2} style={styles.tiles}>
+        <LearnStatTile
+          icon="check-circle"
+          value={attendancePercent === null ? '—' : `${Math.round(attendancePercent)}%`}
+          label="Attendance"
+          href="/(app)/attendance"
+        />
+        <LearnStatTile icon="calendar" value={nextDate ? `${nextDate.day} ${nextDate.month}` : 'None yet'} label="Next exam" href="/(app)/exams" />
+      </Reveal>
 
       {earlier.length > 0 ? (
-        <>
+        <Reveal index={3} style={{ gap: 12 }}>
           <LearnSectionTitle title="Earlier exams" />
           <ListCard>
             {earlier.map((r, i) => {
@@ -122,25 +131,32 @@ function ProgressBody({ child, all }: { child: ParentChild; all: ParentChild[] }
                   subtitle={b ? b.label : 'Tap to see the report card'}
                   href={reportCardHref(r.id)}
                   last={i === earlier.length - 1}
-                  right={<AppText style={{ fontFamily: fonts.semibold, fontSize: 16 }}>{percentLabel(p)}</AppText>}
+                  right={
+                    <AppText tabular style={{ fontFamily: fonts.semibold, fontSize: 16 }}>
+                      {percentLabel(p)}
+                    </AppText>
+                  }
                 />
               );
             })}
           </ListCard>
-        </>
+        </Reveal>
       ) : null}
 
-      <ListCard>
-        <ListRow title="Exams" subtitle={plan?.next ? nextPaperHeadline(plan.next) : 'Date sheet and past papers'} href="/(app)/exams" />
-        <ListRow title="Timetable" subtitle="Classes through the week" href="/(app)/timetable" />
-        <ListRow
-          title="Homework"
-          subtitle={counts ? (counts.todo > 0 ? `${counts.todo} to do` : 'Nothing waiting') : 'Set by the teachers'}
-          dot={counts && counts.todo > 0 ? 'warn' : undefined}
-          href="/(app)/homework"
-          last
-        />
-      </ListCard>
+      <Reveal index={3}>
+        <ListCard>
+          <ListRow icon="file-text" title="Exams" subtitle={plan?.next ? nextPaperHeadline(plan.next) : 'Date sheet and past papers'} href="/(app)/exams" />
+          <ListRow icon="clock" title="Timetable" subtitle="Classes through the week" href="/(app)/timetable" />
+          <ListRow
+            icon="book-open"
+            title="Homework"
+            subtitle={counts ? (counts.todo > 0 ? `${counts.todo} to do` : 'Nothing waiting') : 'Set by the teachers'}
+            dot={counts && counts.todo > 0 ? 'warn' : undefined}
+            href="/(app)/homework"
+            last
+          />
+        </ListCard>
+      </Reveal>
     </>
   );
 }
@@ -160,8 +176,7 @@ export default function ProgressScreen() {
 }
 
 const styles = StyleSheet.create({
-  heroTop: { flexDirection: 'row', alignItems: 'flex-end', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 },
   footnote: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12, marginTop: -8, paddingHorizontal: 4 },
-  linkButton: { minHeight: 44, justifyContent: 'center', paddingLeft: 8 },
+  linkButton: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 6, paddingLeft: 8 },
   tiles: { flexDirection: 'row', gap: 12 },
 });
