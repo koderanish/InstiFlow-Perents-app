@@ -201,6 +201,6 @@ const styles = StyleSheet.create({
   dots: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   dot: { height: 8, borderRadius: 4 },
   cta: { width: 148, height: 52 },
-  ctaFill: { ...StyleSheet.absoluteFillObject },
+  ctaFill: { ...StyleSheet.absoluteFill },
   next: { flex: 1, borderRadius: 26, alignItems: 'center', justifyContent: 'center' },
 });

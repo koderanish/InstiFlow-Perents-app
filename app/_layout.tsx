@@ -117,5 +117,5 @@ export default function RootLayout() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
-  splash: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.bg, pointerEvents: 'none' },
+  splash: { ...StyleSheet.absoluteFill, backgroundColor: colors.bg, pointerEvents: 'none' },
 });

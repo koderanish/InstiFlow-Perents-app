@@ -118,5 +118,5 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'flex-start', gap: 16 },
   text: { flex: 1 },
   glyph: { width: GLYPH, height: GLYPH },
-  mark: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
+  mark: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
 });

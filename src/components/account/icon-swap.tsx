@@ -51,5 +51,5 @@ export function IconSwap({
 }
 
 const styles = StyleSheet.create({
-  layer: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
+  layer: { ...StyleSheet.absoluteFill, alignItems: 'center', justifyContent: 'center' },
 });
