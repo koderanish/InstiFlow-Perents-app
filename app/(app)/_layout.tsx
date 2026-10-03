@@ -26,6 +26,7 @@ export default function AppLayout() {
         <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
         <Stack.Screen name="leave" options={{ animation: 'slide_from_bottom' }} />
         <Stack.Screen name="change-password" options={{ animation: 'slide_from_bottom' }} />
+        <Stack.Screen name="bus-map" options={{ gestureEnabled: false, fullScreenGestureEnabled: false }} />
         <Stack.Screen name="tips" options={{ animation: 'fade', gestureEnabled: false }} />
       </Stack>
     </View>
