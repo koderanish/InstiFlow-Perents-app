@@ -67,7 +67,7 @@ describe('dates in Hindi', () => {
     expect(shortDateParts('2026-10-09', 'hi')).toEqual({ day: '9', month: 'अक्टू॰' });
     expect(shortDateParts('2026-10-09', 'en')).toEqual({ day: '9', month: 'Oct' });
     expect(monthLabel('2026-10', 'hi')).toBe('अक्टूबर 2026');
-    expect(paperWhen(paper(), 'hi')).toBe('9 अक्टूबर, 9:00 am');
+    expect(paperWhen(paper(), 'hi')).toBe('9 अक्टूबर, 9:00 पूर्वाह्न');
     expect(seriesRange(series('2026-10-09', '2026-10-15'), hi, 'hi')).toBe('9 अक्टूबर से 15 अक्टूबर');
   });
 
@@ -94,7 +94,7 @@ describe('exam copy in Hindi', () => {
   });
 
   it('describes time and notes', () => {
-    expect(paperTimeLine(paper(), hi)).toBe('9:00 am, 45 मिनट');
+    expect(paperTimeLine(paper(), hi, 'hi')).toBe('9:00 पूर्वाह्न, 45 मिनट');
     expect(paperNoteLine(paper({ venue: 'Room 12', maxMarks: 50 }), hi)).toBe('Room 12, 50 अंक');
     expect(paperNoteLine(paper({ maxMarks: 1 }), en)).toBe('1 mark');
   });
@@ -142,7 +142,7 @@ describe('timetable copy in Hindi', () => {
   it('labels periods and ranges', () => {
     expect(periodLabel('3', hi)).toBe('पीरियड 3');
     expect(periodLabel('Assembly', hi)).toBe('Assembly');
-    expect(slotTimeRange(slot(), hi)).toBe('8:30 am से 9:15 am');
+    expect(slotTimeRange(slot(), hi, 'hi')).toBe('8:30 पूर्वाह्न से 9:15 पूर्वाह्न');
   });
 
   it('chooses plural class counts', () => {

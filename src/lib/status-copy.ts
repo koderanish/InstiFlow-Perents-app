@@ -38,19 +38,19 @@ export interface Line {
 }
 
 /** School bus row; null when the child does not use school transport. */
-export const busLine = (bus: TodayBus | null, t: TFunction = defaultT): Line | null => {
+export const busLine = (bus: TodayBus | null, t: TFunction = defaultT, locale: Locale = 'en'): Line | null => {
   if (!bus || !bus.onTransport || !bus.status) return null;
   const { leg, pickedUpAt, droppedOffAt } = bus.status;
   const title = t('bus.title');
   if (leg === 'dropped_off') {
-    const time = clock(droppedOffAt);
+    const time = clock(droppedOffAt, locale);
     return { title, subtitle: time ? t('bus.droppedAt', { time }) : t('bus.dropped'), tone: 'good' };
   }
   if (leg === 'on_the_bus') {
-    const time = clock(pickedUpAt);
+    const time = clock(pickedUpAt, locale);
     return { title, subtitle: time ? t('bus.onBusAt', { time }) : t('bus.onBus'), tone: 'good' };
   }
-  const due = clockFromTime(bus.stopTime);
+  const due = clockFromTime(bus.stopTime, locale);
   return { title, subtitle: due ? t('bus.pickupDue', { time: due }) : t('bus.notPicked'), tone: 'neutral' };
 };
 

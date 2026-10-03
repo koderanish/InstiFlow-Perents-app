@@ -40,7 +40,7 @@ function TodayBody({ child, stagger }: { child: ParentChild; stagger: boolean })
   const d = today.data;
   const classLabel = [d.child.className, d.child.sectionName].filter(Boolean).join(' ') || t('account.today.noClass');
   const hero = d.attendance ? attendanceHero(d.attendance.today.status, firstName(child.name), classLabel, t) : null;
-  const bus = busLine(d.bus, t);
+  const bus = busLine(d.bus, t, locale);
   const fees = feesLine(d.fees, t, locale);
   const rows = [
     bus ? { ...bus, icon: 'truck' as const, href: '/(app)/bus' as const } : null,

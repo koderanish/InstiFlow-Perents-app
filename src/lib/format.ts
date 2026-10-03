@@ -32,23 +32,31 @@ export const rupees = (amount: number): string => {
   return `${amount < 0 ? '-' : ''}₹${grouped}${paise ? `.${paise}` : ''}`;
 };
 
-export const clock = (iso: string | null | undefined): string | null => {
+/** Before-noon and after-noon markers. Hindi matches the chat bubbles ('chat.am' / 'chat.pm'). */
+const MERIDIEM: Record<Locale, { am: string; pm: string }> = {
+  en: { am: 'am', pm: 'pm' },
+  hi: { am: 'पूर्वाह्न', pm: 'अपराह्न' },
+};
+
+/** 12-hour time such as "7:42 am" or "7:42 अपराह्न". `hour` is 0 to 23. */
+const twelveHour = (hour: number, minute: string, locale: Locale): string =>
+  `${hour % 12 === 0 ? 12 : hour % 12}:${minute} ${hour < 12 ? MERIDIEM[locale].am : MERIDIEM[locale].pm}`;
+
+export const clock = (iso: string | null | undefined, locale: Locale = 'en'): string | null => {
   if (!iso) return null;
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return null;
-  const h = d.getHours();
-  const m = String(d.getMinutes()).padStart(2, '0');
-  return `${h % 12 === 0 ? 12 : h % 12}:${m} ${h < 12 ? 'am' : 'pm'}`;
+  return twelveHour(d.getHours(), String(d.getMinutes()).padStart(2, '0'), locale);
 };
 
-/** "07:42" or "07:42:00" -> "7:42 am". */
-export const clockFromTime = (time: string | null | undefined): string | null => {
+/** "07:42" or "07:42:00" -> "7:42 am" (or "7:42 पूर्वाह्न"). */
+export const clockFromTime = (time: string | null | undefined, locale: Locale = 'en'): string | null => {
   if (!time) return null;
   const match = /^(\d{1,2}):(\d{2})/.exec(time);
   if (!match) return null;
   const h = Number(match[1]);
   if (h > 23) return null;
-  return `${h % 12 === 0 ? 12 : h % 12}:${match[2]} ${h < 12 ? 'am' : 'pm'}`;
+  return twelveHour(h, match[2] ?? '00', locale);
 };
 
 /** "2026-10-10" -> "10 October" (or "10 अक्टूबर"). */

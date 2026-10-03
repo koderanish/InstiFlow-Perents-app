@@ -30,6 +30,10 @@ export type PendingMessage = {
   body: string;
   createdAt: string;
   status: PendingStatus;
+  /** Sent with every attempt so the server can drop a duplicate if a retry races the first send. */
+  clientId: string;
+  /** The child selected when the message was first sent; a retry uses the same one. */
+  studentId: number | null;
 };
 
 export type ItemStatus = 'sent' | PendingStatus;

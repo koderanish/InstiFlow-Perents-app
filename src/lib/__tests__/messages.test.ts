@@ -31,6 +31,8 @@ const pend = (localId: string, createdAt: string, over: Partial<PendingMessage> 
   body: `body ${localId}`,
   createdAt,
   status: 'sending',
+  clientId: `client-${localId}`,
+  studentId: null,
   ...over,
 });
 

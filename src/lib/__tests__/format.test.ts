@@ -17,6 +17,14 @@ describe('format', () => {
     expect(clock('nonsense')).toBeNull();
   });
 
+  it('uses Hindi am/pm markers for the hi locale', () => {
+    expect(clock(new Date(2026, 9, 2, 7, 42).toISOString(), 'hi')).toBe('7:42 पूर्वाह्न');
+    expect(clock(new Date(2026, 9, 2, 14, 5).toISOString(), 'hi')).toBe('2:05 अपराह्न');
+    expect(clockFromTime('00:15', 'hi')).toBe('12:15 पूर्वाह्न');
+    expect(clockFromTime('12:00', 'hi')).toBe('12:00 अपराह्न');
+    expect(clockFromTime('13:05:00', 'en')).toBe('1:05 pm');
+  });
+
   it('formats HH:MM strings', () => {
     expect(clockFromTime('07:40')).toBe('7:40 am');
     expect(clockFromTime('13:05:00')).toBe('1:05 pm');

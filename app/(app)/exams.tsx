@@ -26,7 +26,7 @@ function PaperRow({ view, last }: { view: PaperView; last: boolean }) {
   const { colors } = useTheme();
   const { paper, past, daysAway } = view;
   const parts = shortDateParts(paper.date, locale);
-  const time = paperTimeLine(paper, t);
+  const time = paperTimeLine(paper, t, locale);
   const note = paperNoteLine(paper, t);
   const when = daysAway !== null && daysAway >= 0 && daysAway <= 1 ? daysToGo(daysAway, t) : null;
   const spoken = [paper.subject, paperWhen(paper, locale), note, past ? t('learn.exams.finished') : when].filter(Boolean).join(', ');

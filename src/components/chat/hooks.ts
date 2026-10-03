@@ -15,6 +15,7 @@ import {
   type PendingMessage,
 } from '@/lib/messages';
 import { useChildren } from '@/features/parent/hooks';
+import { makeClientId } from '@/lib/client-id';
 import { errorHaptic } from '@/motion/haptics';
 
 /** Under the `parent` prefix so pull-to-refresh elsewhere also refreshes the chat. */
@@ -89,9 +90,11 @@ export function useChatThread() {
   const rows = useMemo(() => buildRows(items), [items]);
 
   const submit = useCallback(
-    async (localId: string, body: string) => {
+    async (message: PendingMessage) => {
+      const { localId, body, clientId } = message;
       try {
-        const created = await apiClient.post<ChatMessage>('/parent/messages', studentId === undefined ? { body } : { body, studentId });
+        const payload = message.studentId === null ? { body, clientId } : { body, clientId, studentId: message.studentId };
+        const created = await apiClient.post<ChatMessage>('/parent/messages', payload);
         queryClient.setQueryData<MessagesData>(messagesKey, (old) => appendMessage(old, created));
         setBaseline((prev) => (prev ? new Set(prev).add(created.id) : prev));
         setPending((list) => list.filter((p) => p.localId !== localId));
@@ -100,7 +103,7 @@ export function useChatThread() {
         setPending((list) => list.map((p) => (p.localId === localId ? { ...p, status: 'failed' } : p)));
       }
     },
-    [queryClient, studentId],
+    [queryClient],
   );
 
   /** Returns true when the text was accepted, so the composer knows to clear. */
@@ -109,11 +112,19 @@ export function useChatThread() {
       const checked = validateMessage(raw);
       if (!checked.ok) return false;
       const localId = makeLocalId();
-      setPending((list) => [...list, { localId, body: checked.body, createdAt: new Date().toISOString(), status: 'sending' }]);
-      void submit(localId, checked.body);
+      const pendingMessage: PendingMessage = {
+        localId,
+        body: checked.body,
+        createdAt: new Date().toISOString(),
+        status: 'sending',
+        clientId: makeClientId(),
+        studentId: studentId ?? null,
+      };
+      setPending((list) => [...list, pendingMessage]);
+      void submit(pendingMessage);
       return true;
     },
-    [submit],
+    [submit, studentId],
   );
 
   const retry = useCallback(
@@ -121,7 +132,7 @@ export function useChatThread() {
       const target = pending.find((p) => p.localId === localId);
       if (!target || target.status !== 'failed') return;
       setPending((list) => list.map((p) => (p.localId === localId ? { ...p, status: 'sending' } : p)));
-      void submit(localId, target.body);
+      void submit(target);
     },
     [pending, submit],
   );

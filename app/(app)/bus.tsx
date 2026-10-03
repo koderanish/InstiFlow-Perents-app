@@ -3,6 +3,7 @@ import { Linking, StyleSheet, Text, View, type LayoutChangeEvent } from 'react-n
 import Animated, { Easing, useAnimatedStyle, useReducedMotion, useSharedValue, withDelay, withTiming } from 'react-native-reanimated';
 import { Feather } from '@expo/vector-icons';
 
+import { BusAlerts } from '@/components/bus-alerts';
 import { ChildGate } from '@/components/child-gate';
 import { CollapsingScreen } from '@/components/collapsing-screen';
 import { BackButton } from '@/components/learn/back-button';
@@ -10,7 +11,7 @@ import { useNow, usePullRefresh } from '@/components/learn/hooks';
 import { HeroSurface, PulseDot } from '@/components/learn/learn-parts';
 import { AppText, Card, Chip, EmptyState, ErrorState, Loading } from '@/components/ui';
 import { useBus } from '@/features/parent/hooks';
-import { useT, type TFunction } from '@/i18n';
+import { useLocale, useT, type Locale, type TFunction } from '@/i18n';
 import { buildTimeline, busEta, fillLength, lineLength, type BusEta, type StopState } from '@/lib/bus-timeline';
 import { friendlyError } from '@/lib/errors';
 import { clock, clockFromTime, firstName, initials } from '@/lib/format';
@@ -22,13 +23,13 @@ import type { BusDetails, BusStop } from '@/types/parent';
 
 type OnRoute = Extract<BusDetails, { onTransport: true }>;
 
-const headline = (status: OnRoute['status'], name: string, t: TFunction) => {
+const headline = (status: OnRoute['status'], name: string, t: TFunction, locale: Locale) => {
   if (status.leg === 'dropped_off') {
-    const at = clock(status.droppedOffAt);
+    const at = clock(status.droppedOffAt, locale);
     return { chip: t('bus.dropped'), tone: 'good' as const, title: t('learn.bus.droppedTitle', { name }), sub: at ? t('learn.bus.droppedSub', { time: at }) : t('learn.bus.droppedSubNoTime') };
   }
   if (status.leg === 'on_the_bus') {
-    const at = clock(status.pickedUpAt);
+    const at = clock(status.pickedUpAt, locale);
     return { chip: t('bus.onBus'), tone: 'good' as const, title: t('learn.bus.onBusTitle', { name }), sub: at ? t('learn.bus.onBusSub', { time: at }) : t('learn.bus.onBusSubNoTime') };
   }
   return { chip: t('bus.notPicked'), tone: 'neutral' as const, title: t('learn.bus.waitingTitle', { name }), sub: t('learn.bus.waitingSub') };
@@ -81,6 +82,7 @@ function StopDot({ state, isChildStop }: { state: StopState; isChildStop: boolea
 /** Vertical route. The accent line fills from the first stop down to where the child is. */
 function RouteTimeline({ stops, leg, childName }: { stops: BusStop[]; leg: OnRoute['status']['leg']; childName: string }) {
   const t = useT();
+  const locale = useLocale();
   const styles = useStyles(createStyles);
   const { colors } = useTheme();
   const reduced = useReducedMotion();
@@ -119,7 +121,7 @@ function RouteTimeline({ stops, leg, childName }: { stops: BusStop[]; leg: OnRou
       ) : null}
       {stops.map((s, i) => {
         const state = timeline.states[i] ?? 'upcoming';
-        const time = clockFromTime(s.time);
+        const time = clockFromTime(s.time, locale);
         const landmark = s.landmark?.trim() ? t('learn.bus.near', { landmark: s.landmark.trim() }) : null;
         return (
           <Animated.View
@@ -173,9 +175,10 @@ function SummaryStat({ label, value }: { label: string; value: string }) {
 /** Route name with planned departure, arrival and stop count. Only what the school sent. */
 function RouteSummary({ route, stopCount }: { route: OnRoute['route']; stopCount: number }) {
   const t = useT();
+  const locale = useLocale();
   const styles = useStyles(createStyles);
-  const departs = clockFromTime(route.startTime);
-  const arrives = clockFromTime(route.arrivalTime);
+  const departs = clockFromTime(route.startTime, locale);
+  const arrives = clockFromTime(route.arrivalTime, locale);
   return (
     <Card style={{ gap: 14 }}>
       <AppText accessibilityRole="header" variant="heading" numberOfLines={2} ellipsizeMode="tail">
@@ -237,6 +240,7 @@ function DriverCard({ route }: { route: OnRoute['route'] }) {
 function BusBody({ childId, childName }: { childId: number; childName: string }) {
   const q = useBus(childId);
   const t = useT();
+  const locale = useLocale();
   const now = useNow();
   const styles = useStyles(createStyles);
   const { colors } = useTheme();
@@ -246,8 +250,8 @@ function BusBody({ childId, childName }: { childId: number; childName: string })
   if (!bus.onTransport) {
     return <EmptyState title={t('learn.bus.noBus')} message={t('learn.bus.noBusMessage', { name: childName })} icon="truck" />;
   }
-  const h = headline(bus.status, firstName(childName), t);
-  const eta = busEta(bus.stops, bus.route, bus.status.leg, now);
+  const h = headline(bus.status, firstName(childName), t, locale);
+  const eta = busEta(bus.stops, bus.route, bus.status.leg, now, locale);
   const hasDriverCard = !!(bus.route.driverName?.trim() || bus.route.vehicleNo?.trim());
   return (
     <>
@@ -299,7 +303,12 @@ export default function BusScreen() {
   const refresh = usePullRefresh();
   return (
     <CollapsingScreen {...refresh} title={t('bus.title')} leading={<BackButton />}>
-      <ChildGate>{(child) => <BusBody childId={child.id} childName={child.name} />}</ChildGate>
+      <ChildGate>{(child) => (
+          <>
+            <BusAlerts childId={child.id} />
+            <BusBody childId={child.id} childName={child.name} />
+          </>
+        )}</ChildGate>
     </CollapsingScreen>
   );
 }
