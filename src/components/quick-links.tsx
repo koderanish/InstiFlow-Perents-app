@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { IconBadge } from '@/components/icon-badge';
 import { AppText } from '@/components/ui';
+import { useUnreadMessages } from '@/components/chat/hooks';
 import { useT, type TKey } from '@/i18n';
 import { PressableScale } from '@/motion/pressable-scale';
 import { Reveal } from '@/motion/reveal';
@@ -17,6 +18,7 @@ const LINKS: QuickLink[] = [
   { id: 'bus', label: 'account.links.bus', hint: 'account.links.busHint', icon: 'truck', href: '/(app)/bus' },
   { id: 'reportCard', label: 'account.links.reportCard', hint: 'account.links.reportCardHint', icon: 'award', href: '/(app)/report-card' },
   { id: 'messages', label: 'chat.title', hint: 'chat.linkHint', icon: 'message-circle', href: '/(app)/messages' },
+  { id: 'events', label: 'events.title', hint: 'events.linkHint', icon: 'star', href: '/(app)/events' },
   { id: 'timetable', label: 'account.links.timetable', hint: 'account.links.timetableHint', icon: 'clock', href: '/(app)/timetable' },
   { id: 'exams', label: 'account.links.exams', hint: 'account.links.examsHint', icon: 'edit-3', href: '/(app)/exams' },
   { id: 'homework', label: 'account.links.homework', hint: 'account.links.homeworkHint', icon: 'book-open', href: '/(app)/homework' },
@@ -29,6 +31,7 @@ const LINKS: QuickLink[] = [
 export function QuickLinks({ revealIndex = 5 }: { revealIndex?: number }) {
   const styles = useStyles(createStyles);
   const t = useT();
+  const unread = useUnreadMessages();
   return (
     <View style={{ gap: 12 }}>
       <Reveal index={revealIndex}>
@@ -37,11 +40,23 @@ export function QuickLinks({ revealIndex = 5 }: { revealIndex?: number }) {
         </AppText>
       </Reveal>
       <View style={styles.grid}>
-        {LINKS.map((l, i) => (
+        {LINKS.map((l, i) => {
+          const badge = l.id === 'messages' ? unread : 0;
+          const label = `${t(l.label)}. ${t(l.hint)}${badge > 0 ? `. ${t('chat.unreadBadge', { count: badge })}` : ''}`;
+          return (
           <Reveal key={l.id} index={revealIndex + Math.min(1, Math.floor(i / 2))} style={styles.cell}>
             <Link href={l.href} asChild>
-              <PressableScale accessibilityRole="button" accessibilityLabel={`${t(l.label)}. ${t(l.hint)}`} style={styles.tile}>
-                <IconBadge name={l.icon} size={36} />
+              <PressableScale accessibilityRole="button" accessibilityLabel={label} style={styles.tile}>
+                <View style={styles.top}>
+                  <IconBadge name={l.icon} size={36} />
+                  {badge > 0 ? (
+                    <View style={styles.badge}>
+                      <AppText tabular style={styles.badgeText}>
+                        {badge > 99 ? '99+' : badge}
+                      </AppText>
+                    </View>
+                  ) : null}
+                </View>
                 <View style={styles.copy}>
                   <AppText numberOfLines={1} style={{ fontFamily: fonts.semibold, fontSize: 15 }}>
                     {t(l.label)}
@@ -53,7 +68,8 @@ export function QuickLinks({ revealIndex = 5 }: { revealIndex?: number }) {
               </PressableScale>
             </Link>
           </Reveal>
-        ))}
+          );
+        })}
       </View>
     </View>
   );
@@ -74,5 +90,8 @@ const createStyles = ({ colors, shadow }: Theme) =>
       gap: 10,
       ...shadow.card,
     },
+    top: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+    badge: { minWidth: 22, height: 22, borderRadius: 11, paddingHorizontal: 6, backgroundColor: colors.badFg, alignItems: 'center', justifyContent: 'center' },
+    badgeText: { fontFamily: fonts.bold, fontSize: 12, lineHeight: 16, color: colors.card },
     copy: { paddingHorizontal: 4, paddingBottom: 4, gap: 2 },
   });

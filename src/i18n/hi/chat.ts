@@ -34,5 +34,7 @@ export const chatHi: Record<keyof typeof chat, string> = {
   'chat.counter_one': '{count} अक्षर बाकी',
   'chat.counter_other': '{count} अक्षर बाकी',
   'chat.stale': 'नए संदेश नहीं देख पाए। थोड़ी देर में फिर कोशिश करेंगे।',
+  'chat.unreadBadge_one': '{count} अपठित संदेश',
+  'chat.unreadBadge_other': '{count} अपठित संदेश',
   'chat.loading': 'संदेश लोड हो रहे हैं',
 };

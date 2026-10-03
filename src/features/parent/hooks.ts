@@ -4,6 +4,7 @@ import { useEffect, useMemo } from 'react';
 import { parentApi } from '@/api/services';
 import { SCHOOL } from '@/config/school';
 import type { LeaveInput } from '@/types/parent';
+import { parseEvents } from '@/lib/events';
 import { childrenForSchool, pickChild } from '@/lib/children';
 import { useChildStore } from '@/stores/child-store';
 
@@ -23,6 +24,7 @@ export const queryKeys = {
   invoice: (id: number, invoiceId: number) => ['parent', id, 'invoice', invoiceId] as const,
   profile: (id: number) => ['parent', id, 'profile'] as const,
   school: ['parent', 'school'] as const,
+  events: (id: number | undefined) => ['parent', 'events', id ?? 'all'] as const,
 };
 
 /** All of this school's children plus the one currently selected. */
@@ -95,3 +97,7 @@ export const useChildProfile = (id: number | undefined) =>
   useQuery({ queryKey: queryKeys.profile(id ?? 0), queryFn: () => parentApi.profile(id as number), enabled: enabled(id) });
 
 export const useSchoolContact = () => useQuery({ queryKey: queryKeys.school, queryFn: () => parentApi.school() });
+
+/** School events. `id` is optional: the school-wide list still loads when no child is selected. */
+export const useEvents = (id: number | undefined, ready = true) =>
+  useQuery({ queryKey: queryKeys.events(id), queryFn: async () => parseEvents(await parentApi.events(id)), enabled: ready });
