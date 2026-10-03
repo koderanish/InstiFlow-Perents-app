@@ -3,16 +3,20 @@ import { Platform } from 'react-native';
 import { create } from 'zustand';
 
 import { SECURE_STORE_KEYS } from '@/constants/storage-keys';
-import { defaultPrefs, parsePrefs, serializePrefs, type NotificationPrefs, type PrefKey } from '@/lib/prefs';
+import { defaultPrefs, parsePrefs, serializePrefs, type Language, type NotificationPrefs, type PrefKey, type ThemeMode } from '@/lib/prefs';
 
 interface PrefsState {
   /** False until the saved choices have been read from the phone. */
   hydrated: boolean;
   notifications: NotificationPrefs;
   tipsSeen: boolean;
+  themeMode: ThemeMode;
+  language: Language | null;
   restore: () => Promise<void>;
   setNotification: (key: PrefKey, value: boolean) => void;
   markTipsSeen: () => void;
+  setThemeMode: (mode: ThemeMode) => void;
+  setLanguage: (language: Language | null) => void;
 }
 
 const webStorage = (): Storage | null => {
@@ -47,8 +51,8 @@ const write = (raw: string): void => {
 
 export const usePrefsStore = create<PrefsState>((set, get) => {
   const save = () => {
-    const { notifications, tipsSeen } = get();
-    write(serializePrefs({ notifications, tipsSeen }));
+    const { notifications, tipsSeen, themeMode, language } = get();
+    write(serializePrefs({ notifications, tipsSeen, themeMode, language }));
   };
   return {
     hydrated: false,
@@ -56,7 +60,7 @@ export const usePrefsStore = create<PrefsState>((set, get) => {
     restore: async () => {
       if (get().hydrated) return;
       const saved = parsePrefs(await read());
-      set({ hydrated: true, notifications: saved.notifications, tipsSeen: saved.tipsSeen });
+      set({ hydrated: true, notifications: saved.notifications, tipsSeen: saved.tipsSeen, themeMode: saved.themeMode, language: saved.language });
     },
     setNotification: (key, value) => {
       set((s) => ({ notifications: { ...s.notifications, [key]: value } }));
@@ -64,6 +68,14 @@ export const usePrefsStore = create<PrefsState>((set, get) => {
     },
     markTipsSeen: () => {
       set({ tipsSeen: true });
+      save();
+    },
+    setThemeMode: (themeMode) => {
+      set({ themeMode });
+      save();
+    },
+    setLanguage: (language) => {
+      set({ language });
       save();
     },
   };

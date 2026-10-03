@@ -1,3 +1,7 @@
+import { defaultT, type TFunction } from '@/i18n/translate';
+import { monthName } from '@/i18n/names';
+import type { Locale } from '@/i18n/types';
+
 /** Presentation helpers. Pure, so they can be tested without a device. */
 
 export const firstName = (fullName: string): string => fullName.trim().split(/\s+/)[0] ?? fullName.trim();
@@ -10,11 +14,11 @@ export const initials = (fullName: string): string => {
   return (first + last).toUpperCase();
 };
 
-export const greeting = (date: Date = new Date()): string => {
+export const greeting = (date: Date = new Date(), t: TFunction = defaultT): string => {
   const hour = date.getHours();
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  return 'Good evening';
+  if (hour < 12) return t('greeting.morning');
+  if (hour < 17) return t('greeting.afternoon');
+  return t('greeting.evening');
 };
 
 /** Indian digit grouping: 1234567 -> 12,34,567. Rounds to whole rupees unless paise are present. */
@@ -47,12 +51,10 @@ export const clockFromTime = (time: string | null | undefined): string | null =>
   return `${h % 12 === 0 ? 12 : h % 12}:${match[2]} ${h < 12 ? 'am' : 'pm'}`;
 };
 
-const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-
-/** "2026-10-10" -> "10 October". */
-export const dayMonth = (day: string | null | undefined): string | null => {
+/** "2026-10-10" -> "10 October" (or "10 अक्टूबर"). */
+export const dayMonth = (day: string | null | undefined, locale: Locale = 'en'): string | null => {
   const match = /^(\d{4})-(\d{2})-(\d{2})/.exec(day ?? '');
   if (!match) return null;
-  const month = MONTHS[Number(match[2]) - 1];
+  const month = monthName(locale, Number(match[2]));
   return month ? `${Number(match[3])} ${month}` : null;
 };

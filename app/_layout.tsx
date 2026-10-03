@@ -12,13 +12,15 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeOut, ReduceMotion } from 'react-native-reanimated';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { BrandSplash } from '@/components/account/brand';
 import { AppProviders, queryClient } from '@/providers/query-provider';
 import { useAuthStore } from '@/stores/auth-store';
 import { usePrefsStore } from '@/stores/prefs-store';
-import { colors } from '@/theme';
+import { I18nProvider } from '@/i18n';
+import { ThemeProvider, useTheme } from '@/theme';
 
 void SplashScreen.preventAutoHideAsync();
 
@@ -26,7 +28,19 @@ void SplashScreen.preventAutoHideAsync();
 const SPLASH_MIN_MS = 700;
 const splashOut = FadeOut.duration(320).reduceMotion(ReduceMotion.System);
 
+/** Everything that needs the theme and language sits below the providers. */
 export default function RootLayout() {
+  return (
+    <ThemeProvider>
+      <I18nProvider>
+        <RootShell />
+      </I18nProvider>
+    </ThemeProvider>
+  );
+}
+
+function RootShell() {
+  const { colors, isDark } = useTheme();
   const [fontsLoaded] = useFonts({
     HankenGrotesk_400Regular,
     HankenGrotesk_500Medium,
@@ -97,25 +111,25 @@ export default function RootLayout() {
   if (!fontsLoaded) return null;
 
   return (
-    <View style={styles.root}>
+    <GestureHandlerRootView style={[styles.root, { backgroundColor: colors.bg }]}>
       {ready ? (
         <SafeAreaProvider>
           <AppProviders>
-            <StatusBar style="dark" />
+            <StatusBar style={isDark ? 'light' : 'dark'} />
             <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.bg } }} />
           </AppProviders>
         </SafeAreaProvider>
       ) : null}
       {splashGone ? null : (
-        <Animated.View exiting={splashOut} style={styles.splash}>
+        <Animated.View exiting={splashOut} style={[styles.splash, { backgroundColor: colors.bg }]}>
           <BrandSplash />
         </Animated.View>
       )}
-    </View>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: colors.bg },
-  splash: { ...StyleSheet.absoluteFill, backgroundColor: colors.bg, pointerEvents: 'none' },
+  root: { flex: 1 },
+  splash: { ...StyleSheet.absoluteFill, pointerEvents: 'none' },
 });
