@@ -36,7 +36,7 @@ const LAST = '99:99';
 const comparePapers = (a: ExamPaper, b: ExamPaper): number =>
   a.date.localeCompare(b.date) || (a.startTime ?? LAST).localeCompare(b.startTime ?? LAST) || a.id - b.id;
 
-/** Upcoming series first (soonest paper first), then finished series (most recent first). */
+/** Most recent series first (start date, newest on top); papers stay chronological. */
 export const buildExamPlan = (exams: ExamSeries[], now: Date): ExamPlan => {
   const views: SeriesView[] = exams.map((series) => {
     const papers = [...series.papers].sort(comparePapers).map((paper): PaperView => {
@@ -46,9 +46,10 @@ export const buildExamPlan = (exams: ExamSeries[], now: Date): ExamPlan => {
     return { series, papers, upcoming: papers.some((p) => !p.past) };
   });
 
-  const firstUpcoming = (v: SeriesView) => v.papers.find((p) => !p.past)?.paper.date ?? '';
-  const upcoming = views.filter((v) => v.upcoming).sort((a, b) => firstUpcoming(a).localeCompare(firstUpcoming(b)));
-  const finished = views.filter((v) => !v.upcoming).sort((a, b) => b.series.startDate.localeCompare(a.series.startDate));
+  const upcoming = views.filter((v) => v.upcoming);
+  const finished = views.filter((v) => !v.upcoming);
+  const byRecent = (a: SeriesView, b: SeriesView) =>
+    b.series.startDate.localeCompare(a.series.startDate) || b.series.id - a.series.id;
 
   let next: NextPaper | null = null;
   for (const view of upcoming) {
@@ -58,7 +59,7 @@ export const buildExamPlan = (exams: ExamSeries[], now: Date): ExamPlan => {
       next = { series: view.series, paper: candidate.paper, days: candidate.daysAway };
     }
   }
-  return { next, series: [...upcoming, ...finished] };
+  return { next, series: [...upcoming.sort(byRecent), ...finished.sort(byRecent)] };
 };
 
 /** "today", "tomorrow", "in 7 days". */

@@ -40,6 +40,12 @@ describe('buildExamPlan', () => {
     expect(plan.series[1]?.upcoming).toBe(false);
   });
 
+  it('shows the most recent series on top', () => {
+    const mid = series(3, 'Mid term', '2026-10-05', '2026-10-08', [paper(31, 'English', '2026-10-05')]);
+    const plan = buildExamPlan([unit, half, mid], now);
+    expect(plan.series.map((s) => s.series.name)).toEqual(['Unit test 2', 'Mid term', 'Half yearly']);
+  });
+
   it('finds the next paper and its days to go', () => {
     const plan = buildExamPlan([half, unit], now);
     expect(plan.next?.paper.subject).toBe('Maths');
