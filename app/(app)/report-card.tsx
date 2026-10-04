@@ -174,27 +174,33 @@ function ReportCard({ child, result }: { child: ParentChild; result: ExamResult 
   );
 }
 
-function ReportCardBody({ child, examId }: { child: ParentChild; examId: number }) {
+function ReportCardBody({ child, examId }: { child: ParentChild; examId: number | null }) {
   const q = useResults(child.id);
   const t = useT();
   if (q.isLoading) return <Loading />;
   if (q.isError || !q.data) return <ErrorState message={friendlyError(q.error)} onRetry={() => void q.refetch()} />;
-  const result = q.data.results.find((r) => r.id === examId);
-  if (!result) {
+  // Opened without an exam (e.g. Today's quick link): show the latest published result.
+  const list = q.data.results;
+  const result = examId !== null ? list.find((r) => r.id === examId) : undefined;
+  const shown = result ?? (examId === null ? list[0] : undefined);
+  if (!shown) {
     return <EmptyState title={t('learn.reportCard.unavailable')} message={t('learn.reportCard.unavailableMessage')} />;
   }
-  return <ReportCard child={child} result={result} />;
+  return <ReportCard child={child} result={shown} />;
 }
 
 export default function ReportCardScreen() {
   const t = useT();
   const refresh = usePullRefresh();
   const params = useLocalSearchParams<{ examId?: string }>();
-  const examId = Number(params.examId);
+  const raw = params.examId === undefined ? NaN : Number(params.examId);
+  const examId = Number.isFinite(raw) ? raw : null;
   const { child } = useChildren();
   const results = useResults(child?.id);
-  const result = results.data?.results.find((r) => r.id === examId);
-  const subtitle = child ? [firstName(child.name), child.className, result?.name].filter(Boolean).join(', ') : undefined;
+  const list = results.data?.results ?? [];
+  const result = examId !== null ? list.find((r) => r.id === examId) : undefined;
+  const shown = result ?? (examId === null ? list[0] : undefined);
+  const subtitle = child ? [firstName(child.name), child.className, shown?.name].filter(Boolean).join(', ') : undefined;
   return (
     <CollapsingScreen {...refresh} title={t('learn.reportCard.title')} subtitle={subtitle} leading={<BackButton />}>
       <ChildGate>{(selected) => <ReportCardBody child={selected} examId={examId} />}</ChildGate>
