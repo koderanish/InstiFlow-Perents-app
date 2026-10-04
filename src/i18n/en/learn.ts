@@ -143,6 +143,11 @@ export const learn = {
   'learn.diary.empty': 'Nothing yet',
   'learn.diary.emptyMessage': "The teachers have not added today's class notes. Check again later.",
   'learn.diary.coveredSpoken': '{percent} percent covered',
+  'learn.diary.homeworkLabel': 'Homework',
+  'learn.diary.hasLog': 'has class notes',
+  'learn.diary.today': 'Today',
+  'learn.diary.prevMonth': 'Previous month',
+  'learn.diary.nextMonth': 'Next month',
 
   // School bus
   'learn.bus.droppedTitle': '{name} is home safe',

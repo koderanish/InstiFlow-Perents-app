@@ -20,6 +20,7 @@ export const queryKeys = {
   fees: (id: number) => ['parent', id, 'fees'] as const,
   notices: (id: number) => ['parent', id, 'notices'] as const,
   diary: (id: number, date: string | undefined) => ['parent', id, 'diary', date ?? 'today'] as const,
+  diaryMonth: (id: number, month: string) => ['parent', id, 'diary', 'month', month] as const,
   timetable: (id: number) => ['parent', id, 'timetable'] as const,
   exams: (id: number) => ['parent', id, 'exams'] as const,
   results: (id: number) => ['parent', id, 'results'] as const,
@@ -96,6 +97,9 @@ export const useNotices = (id: number | undefined) =>
 
 export const useDiary = (id: number | undefined, date?: string) =>
   useQuery({ queryKey: queryKeys.diary(id ?? 0, date), queryFn: () => parentApi.diary(id as number, date), enabled: enabled(id) });
+
+export const useDiaryMonth = (id: number | undefined, month: string) =>
+  useQuery({ queryKey: queryKeys.diaryMonth(id ?? 0, month), queryFn: () => parentApi.diaryMonth(id as number, month), enabled: enabled(id) });
 
 export const useTimetable = (id: number | undefined) =>
   useQuery({ queryKey: queryKeys.timetable(id ?? 0), queryFn: () => parentApi.timetable(id as number), enabled: enabled(id) });

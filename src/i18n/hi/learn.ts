@@ -144,6 +144,11 @@ export const learnHi: Record<keyof typeof learn, string> = {
   'learn.diary.empty': 'अभी कुछ नहीं',
   'learn.diary.emptyMessage': 'शिक्षकों ने आज के कक्षा-नोट्स अभी नहीं जोड़े हैं। थोड़ी देर बाद फिर देखें।',
   'learn.diary.coveredSpoken': '{percent} प्रतिशत पूरा हुआ',
+  'learn.diary.homeworkLabel': 'गृहकार्य',
+  'learn.diary.hasLog': 'कक्षा नोट्स हैं',
+  'learn.diary.today': 'आज',
+  'learn.diary.prevMonth': 'पिछला महीना',
+  'learn.diary.nextMonth': 'अगला महीना',
 
   // School bus
   'learn.bus.droppedTitle': '{name} सुरक्षित घर पहुँच गए',

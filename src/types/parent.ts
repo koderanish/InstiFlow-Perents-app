@@ -56,6 +56,7 @@ export interface Notice {
 export interface DiaryEntry {
   subject: string;
   topic: string | null;
+  homework: string | null;
   chapterTitle: string | null;
   notes: string | null;
   progress: number;
@@ -144,6 +145,14 @@ export interface FeesData {
 export interface DiaryDay {
   date: string;
   entries: DiaryEntry[];
+}
+
+/** Month dots for the diary calendar: ISO dates with at least one log. */
+export interface DiaryMonth {
+  month: string;
+  days: string[];
+  /** Period counts per weekday (0 = Monday) for the "X of Y" header. */
+  periods: Record<string, number>;
 }
 
 /* ---------- Screens added after the foundation. Shapes are the API contract. ---------- */
