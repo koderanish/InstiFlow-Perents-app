@@ -21,7 +21,14 @@ function DiaryCard({ entry, index }: { entry: DiaryEntry; index: number }) {
   const t = useT();
   const { colors } = useTheme();
   const covered = progressFraction(entry.progress);
-  const heading = [entry.chapterTitle, entry.topic].filter(Boolean).join(', ');
+  // One uniform rule (same as the teacher app): unit + chapter collapse into
+  // a breadcrumb, and the topic prints only when it adds something new —
+  // never "Varn Vyavastha, Varn Vyavastha".
+  const unit = (entry.unitTitle ?? '').trim();
+  const chapter = (entry.chapterTitle ?? '').trim();
+  const topic = (entry.topic ?? '').trim();
+  const breadcrumb = [unit, chapter].filter(Boolean).join(' → ');
+  const showTopic = topic !== '' && topic.toLowerCase() !== chapter.toLowerCase();
   return (
     <Reveal index={index}>
       <Card>
@@ -35,7 +42,8 @@ function DiaryCard({ entry, index }: { entry: DiaryEntry; index: number }) {
             </AppText>
           ) : null}
         </View>
-        {heading ? <AppText style={{ fontSize: 15, lineHeight: 22, marginTop: 6 }}>{heading}</AppText> : null}
+        {breadcrumb ? <AppText style={{ fontSize: 15, lineHeight: 22, marginTop: 6 }}>{breadcrumb}</AppText> : null}
+        {showTopic ? <AppText style={{ fontSize: 15, lineHeight: 22, marginTop: 6 }}>{topic}</AppText> : null}
         {entry.homework ? (
           <AppText style={{ fontSize: 15, lineHeight: 22, marginTop: 6 }}>
             {t('learn.diary.homeworkLabel')}: {entry.homework}

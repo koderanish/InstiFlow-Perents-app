@@ -57,6 +57,7 @@ export interface DiaryEntry {
   subject: string;
   topic: string | null;
   homework: string | null;
+  unitTitle: string | null;
   chapterTitle: string | null;
   notes: string | null;
   progress: number;
