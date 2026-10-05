@@ -102,6 +102,7 @@ export const learnHi: Record<keyof typeof learn, string> = {
   'learn.homework.markedMarks': 'जाँचा गया, {marks}',
   'learn.homework.handedInLate': 'देर से जमा किया',
   'learn.homework.handedIn': 'जमा किया',
+  'learn.homework.notCompleted': 'पूरा नहीं किया',
   'learn.homework.teacherNote': 'शिक्षक की टिप्पणी: {note}',
   'learn.homework.setByOn': '{teacher} ने {date} को दिया',
   'learn.homework.setBy': '{teacher} ने दिया',

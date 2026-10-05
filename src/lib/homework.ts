@@ -36,9 +36,9 @@ export interface HomeworkBadge {
   tone: Tone;
 }
 
-/** Due badge for work still to do; null once handed in. Neutral means "just show the date". */
+/** Due badge for work still to do; null once handed in or explicitly marked. Neutral means "just show the date". */
 export const dueBadge = (item: HomeworkItem, now: Date, t: TFunction = defaultT, locale: Locale = 'en'): HomeworkBadge | null => {
-  if (isDone(item)) return null;
+  if (isDone(item) || item.status === 'not_completed') return null;
   const days = daysFromToday(item.dueDate, now);
   if (item.status === 'overdue' || (days !== null && days < 0)) return { label: t('learn.homework.overdue'), tone: 'bad' };
   if (days === null) return { label: t('learn.homework.noDueDate'), tone: 'neutral' };
@@ -58,6 +58,7 @@ export const doneBadge = (item: HomeworkItem, t: TFunction = defaultT): Homework
   }
   if (item.status === 'late') return { label: t('learn.homework.handedInLate'), tone: 'warn' };
   if (item.status === 'submitted') return { label: t('learn.homework.handedIn'), tone: 'good' };
+  if (item.status === 'not_completed') return { label: t('learn.homework.notCompleted'), tone: 'bad' };
   return null;
 };
 

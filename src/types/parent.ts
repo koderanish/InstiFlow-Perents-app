@@ -221,7 +221,7 @@ export interface ResultsData {
   results: ExamResult[];
 }
 
-export type HomeworkStatus = 'pending' | 'submitted' | 'late' | 'graded' | 'overdue';
+export type HomeworkStatus = 'pending' | 'submitted' | 'late' | 'graded' | 'overdue' | 'not_completed';
 
 export interface HomeworkItem {
   id: number;

@@ -71,6 +71,15 @@ describe('badges', () => {
     expect(dueBadge(item(1, { status: 'submitted', dueDate: '2026-09-01' }), now)).toBeNull();
   });
 
+  it('keeps an explicit not-completed mark in To do with its own badge', () => {
+    const marked = item(7, { status: 'not_completed', dueDate: '2026-09-01' });
+    expect(isDone(marked)).toBe(false);
+    expect(visibleHomework([marked], 'todo').map((i) => i.id)).toEqual([7]);
+    expect(visibleHomework([marked], 'done')).toEqual([]);
+    expect(dueBadge(marked, now)).toBeNull();
+    expect(doneBadge(marked)).toEqual({ label: 'Not completed', tone: 'bad' });
+  });
+
   it('words done states', () => {
     expect(doneBadge(item(1, { status: 'graded', marks: 8, maxMarks: 10 }))).toEqual({ label: 'Marked, 8 of 10', tone: 'good' });
     expect(doneBadge(item(1, { status: 'graded', marks: 8 }))).toEqual({ label: 'Marked, 8', tone: 'good' });

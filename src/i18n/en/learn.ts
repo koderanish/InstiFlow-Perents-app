@@ -101,6 +101,7 @@ export const learn = {
   'learn.homework.markedMarks': 'Marked, {marks}',
   'learn.homework.handedInLate': 'Handed in late',
   'learn.homework.handedIn': 'Handed in',
+  'learn.homework.notCompleted': 'Not completed',
   'learn.homework.teacherNote': "Teacher's note: {note}",
   'learn.homework.setByOn': 'Set by {teacher} on {date}',
   'learn.homework.setBy': 'Set by {teacher}',
