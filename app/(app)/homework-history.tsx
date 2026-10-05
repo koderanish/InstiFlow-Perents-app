@@ -18,15 +18,19 @@ import type { ParentChild } from '@/types/parent';
 import { HomeworkRow } from './homework';
 
 function HistoryBody({ child, all }: { child: ParentChild; all: ParentChild[] }) {
-  const q = useHomework(child.id, true);
+  const fullQ = useHomework(child.id, true);
+  const recentQ = useHomework(child.id);
   const now = useNow();
   const t = useT();
   const [open, setOpen] = useState<ReadonlySet<number>>(new Set());
 
-  const items = useMemo(() => [...(q.data?.items ?? [])], [q.data]);
+  // Prefer the full history; fall back to the recent window so one failed or
+  // revalidated (304) query never blanks the page.
+  const items = useMemo(() => [...(fullQ.data?.items ?? recentQ.data?.items ?? [])], [fullQ.data, recentQ.data]);
 
-  if (q.isLoading) return <Loading />;
-  if (q.isError || !q.data) return <ErrorState message={friendlyError(q.error)} onRetry={() => void q.refetch()} />;
+  if (fullQ.isLoading && recentQ.isLoading) return <Loading />;
+  if (!fullQ.data && !recentQ.data)
+    return <ErrorState message={friendlyError(fullQ.error ?? recentQ.error)} onRetry={() => { void fullQ.refetch(); void recentQ.refetch(); }} />;
 
   const toggle = (id: number) =>
     setOpen((prev) => {

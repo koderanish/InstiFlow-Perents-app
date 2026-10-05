@@ -128,7 +128,10 @@ function HomeworkBody({ child, all }: { child: ParentChild; all: ParentChild[] }
   const [open, setOpen] = useState<ReadonlySet<number>>(new Set());
 
   const items = useMemo(() => (q.data ? visibleHomework(q.data.items, filter) : []), [q.data, filter]);
-  const stats = useMemo(() => homeworkStats(fullQ.data?.items ?? []), [fullQ.data]);
+  // Stats prefer the full history; fall back to the recent window so a single
+  // failed/revalidated query never hides the card (the History screen does
+  // the same below).
+  const stats = useMemo(() => homeworkStats(fullQ.data?.items ?? q.data?.items ?? []), [fullQ.data, q.data]);
 
   if (q.isLoading) return <Loading />;
   if (q.isError || !q.data) return <ErrorState message={friendlyError(q.error)} onRetry={() => void q.refetch()} />;
@@ -146,7 +149,7 @@ function HomeworkBody({ child, all }: { child: ParentChild; all: ParentChild[] }
   return (
     <>
       <ChildChips items={all} selectedId={child.id} />
-      {fullQ.data ? (
+      {fullQ.data || q.data ? (
         <Reveal index={0}>
           <Card>
             <View style={styles.statsTop}>
