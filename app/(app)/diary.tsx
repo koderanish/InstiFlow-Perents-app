@@ -9,51 +9,58 @@ import { AppText, Card, EmptyState, ErrorState, Loading } from '@/components/ui'
 import { useDiary, useDiaryMonth } from '@/features/parent/hooks';
 import { useT, useLocale } from '@/i18n';
 import { friendlyError } from '@/lib/errors';
+import { groupDiaryBySubject, type DiarySubjectGroup } from '@/lib/diary-group';
 import { monthGrid, monthLabel, shiftMonth, weekdayInitials } from '@/lib/calendar';
 import { dateKey } from '@/lib/learn-dates';
 import { AnimatedBar } from '@/motion/animated-bar';
 import { progressFraction } from '@/motion/motion-math';
 import { Reveal } from '@/motion/reveal';
 import { fonts, useStyles, useTheme, type Theme } from '@/theme';
-import type { DiaryEntry } from '@/types/parent';
 
-function DiaryCard({ entry, index }: { entry: DiaryEntry; index: number }) {
+function DiaryCard({ group, index }: { group: DiarySubjectGroup; index: number }) {
   const t = useT();
   const { colors } = useTheme();
-  const covered = progressFraction(entry.progress);
-  // One uniform rule (same as the teacher app): unit + chapter collapse into
-  // a breadcrumb, and the topic prints only when it adds something new —
-  // never "Varn Vyavastha, Varn Vyavastha".
-  const unit = (entry.unitTitle ?? '').trim();
-  const chapter = (entry.chapterTitle ?? '').trim();
-  const topic = (entry.topic ?? '').trim();
-  const breadcrumb = [unit, chapter].filter(Boolean).join(' → ');
-  const showTopic = topic !== '' && topic.toLowerCase() !== chapter.toLowerCase();
+  const covered = Math.max(0, ...group.entries.map((e) => progressFraction(e.progress)));
+  const time = group.entries.find((e) => (e.time ?? '').trim() !== '')?.time ?? null;
   return (
     <Reveal index={index}>
       <Card>
         <View style={styles.top}>
           <AppText numberOfLines={1} ellipsizeMode="tail" style={{ flex: 1, fontFamily: fonts.semibold, fontSize: 17 }}>
-            {entry.subject}
+            {group.subject}
           </AppText>
-          {entry.time ? (
+          {time ? (
             <AppText variant="caption" tabular>
-              {entry.time}
+              {time}
             </AppText>
           ) : null}
         </View>
-        {breadcrumb ? <AppText style={{ fontSize: 15, lineHeight: 22, marginTop: 6 }}>{breadcrumb}</AppText> : null}
-        {showTopic ? <AppText style={{ fontSize: 15, lineHeight: 22, marginTop: 6 }}>{topic}</AppText> : null}
-        {entry.homework ? (
-          <AppText style={{ fontSize: 15, lineHeight: 22, marginTop: 6 }}>
-            {t('learn.diary.homeworkLabel')}: {entry.homework}
-          </AppText>
-        ) : null}
-        {entry.notes ? (
-          <AppText variant="caption" style={{ fontSize: 14, lineHeight: 21, marginTop: 6, color: colors.muted }}>
-            {entry.notes}
-          </AppText>
-        ) : null}
+        {group.entries.map((entry, i) => {
+          // One uniform rule (same as the teacher app): unit + chapter
+          // collapse into a breadcrumb, and the topic prints only when it
+          // adds something new — never "Varn Vyavastha, Varn Vyavastha".
+          const unit = (entry.unitTitle ?? '').trim();
+          const chapter = (entry.chapterTitle ?? '').trim();
+          const topic = (entry.topic ?? '').trim();
+          const breadcrumb = [unit, chapter].filter(Boolean).join(' → ');
+          const showTopic = topic !== '' && topic.toLowerCase() !== chapter.toLowerCase();
+          return (
+            <View key={i}>
+              {breadcrumb ? <AppText style={{ fontSize: 15, lineHeight: 22, marginTop: 6 }}>{breadcrumb}</AppText> : null}
+              {showTopic ? <AppText style={{ fontSize: 15, lineHeight: 22, marginTop: 6 }}>{topic}</AppText> : null}
+              {entry.homework ? (
+                <AppText style={{ fontSize: 15, lineHeight: 22, marginTop: 6 }}>
+                  {t('learn.diary.homeworkLabel')}: {entry.homework}
+                </AppText>
+              ) : null}
+              {entry.notes ? (
+                <AppText variant="caption" style={{ fontSize: 14, lineHeight: 21, marginTop: 6, color: colors.muted }}>
+                  {entry.notes}
+                </AppText>
+              ) : null}
+            </View>
+          );
+        })}
         {covered > 0 ? (
           <View accessible accessibilityLabel={t('learn.diary.coveredSpoken', { percent: Math.round(covered * 100) })} style={styles.progress}>
             <AnimatedBar ratio={covered} delay={260} style={{ flex: 1 }} />
@@ -93,6 +100,7 @@ function DiaryBody({ childId }: { childId: number }) {
   );
   const dotted = useMemo(() => new Set(monthData?.days ?? []), [monthData]);
   const entries = useMemo(() => dayQuery.data?.entries ?? [], [dayQuery]);
+  const groups = useMemo(() => groupDiaryBySubject(entries), [entries]);
 
   const totalPeriods = monthData?.periods?.[String(weekdayIndex(selected))] ?? null;
   const header =
@@ -167,7 +175,7 @@ function DiaryBody({ childId }: { childId: number }) {
       ) : entries.length === 0 ? (
         <EmptyState title={t('learn.diary.empty')} message={t('learn.diary.emptyMessage')} icon="book" />
       ) : (
-        entries.map((e, i) => <DiaryCard key={`${e.subject}-${i}`} entry={e} index={i} />)
+        groups.map((g, i) => <DiaryCard key={`${g.subject}-${i}`} group={g} index={i} />)
       )}
     </View>
   );
