@@ -15,6 +15,8 @@ type BrandingState = {
   restore: () => Promise<void>;
   /** Asks the server for the school's current logo and colour. Quiet on failure: the saved copy stays. */
   refresh: () => Promise<void>;
+  /** Signed-in parents: takes the colour and logo of the school their children are in, which can differ from the compiled-in school code. */
+  refreshForParent: () => Promise<void>;
 };
 
 const read = async (): Promise<string | null> => {
@@ -53,6 +55,16 @@ export const useBrandingStore = create<BrandingState>((set, get) => ({
       write(toSaved(next));
     } catch {
       // Offline or the school is not found: keep what we have.
+    }
+  },
+  refreshForParent: async () => {
+    try {
+      const data = await apiClient.get<unknown>('/parent/school');
+      const next = parseBranding(data, get().branding);
+      set({ branding: next });
+      write(toSaved(next));
+    } catch {
+      // Not signed in yet or offline: keep what we have.
     }
   },
 }));

@@ -173,7 +173,7 @@ const createStyles = ({ colors }: Theme) =>
     monthRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 },
     monthButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' },
     grid: { flexDirection: 'row', flexWrap: 'wrap' },
-    cell: { width: `${100 / 7}%`, height: 46, alignItems: 'center', justifyContent: 'center' },
+    cell: { width: '14.28%', height: 46, alignItems: 'center', justifyContent: 'center' },
     day: { width: 38, height: 38, borderRadius: 19, alignItems: 'center', justifyContent: 'center' },
     today: { borderWidth: 2, borderColor: colors.accent },
   });
