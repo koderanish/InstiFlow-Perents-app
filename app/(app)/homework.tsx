@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, { LinearTransition } from 'react-native-reanimated';
+import { useRouter } from 'expo-router';
 
 import { ChildChips } from '@/components/child-chips';
 import { CollapsingScreen } from '@/components/collapsing-screen';
@@ -8,13 +9,15 @@ import { ChildGate } from '@/components/child-gate';
 import { BackButton } from '@/components/learn/back-button';
 import { useNow, usePullRefresh } from '@/components/learn/hooks';
 import { RotatingChevron } from '@/components/learn/learn-parts';
-import { AppText, Card, Chip, EmptyState, ErrorState, ListCard, Loading } from '@/components/ui';
+import { AppText, Card, Chip, EmptyState, ErrorState, ListCard, Loading, PrimaryButton } from '@/components/ui';
 import { useChildren, useHomework } from '@/features/parent/hooks';
 import { useLocale, useT, type TKey } from '@/i18n';
 import { friendlyError } from '@/lib/errors';
 import { firstName } from '@/lib/format';
-import { doneBadge, dueBadge, feedbackLine, homeworkCounts, homeworkSubtitle, setByLine, visibleHomework, type HomeworkFilter } from '@/lib/homework';
+import { doneBadge, dueBadge, feedbackLine, homeworkCounts, homeworkStats, homeworkSubtitle, setByLine, visibleHomework, type HomeworkFilter } from '@/lib/homework';
 import { CountUp } from '@/motion/count-up';
+import { AnimatedBar } from '@/motion/animated-bar';
+import { progressFraction } from '@/motion/motion-math';
 import { enterFade, enterRise, exitFade } from '@/motion/presets';
 import { PressableScale } from '@/motion/pressable-scale';
 import { Reveal } from '@/motion/reveal';
@@ -34,7 +37,7 @@ const EMPTY: Record<HomeworkFilter, { title: TKey; message: TKey }> = {
   all: { title: 'learn.homework.noneYet', message: 'learn.homework.noneYetMessage' },
 };
 
-function HomeworkRow({ item, now, expanded, onToggle, last, index }: { item: HomeworkItem; now: Date; expanded: boolean; onToggle: () => void; last: boolean; index: number }) {
+export function HomeworkRow({ item, now, expanded, onToggle, last, index }: { item: HomeworkItem; now: Date; expanded: boolean; onToggle: () => void; last: boolean; index: number }) {
   const t = useT();
   const locale = useLocale();
   const styles = useStyles(createStyles);
@@ -115,13 +118,17 @@ function HomeworkRow({ item, now, expanded, onToggle, last, index }: { item: Hom
 
 function HomeworkBody({ child, all }: { child: ParentChild; all: ParentChild[] }) {
   const q = useHomework(child.id);
+  const fullQ = useHomework(child.id, true);
   const now = useNow();
   const t = useT();
+  const router = useRouter();
+  const styles = useStyles(createStyles);
   const options = useMemo<SegmentOption<HomeworkFilter>[]>(() => OPTIONS.map((o) => ({ key: o.key, label: t(o.label) })), [t]);
   const [filter, setFilter] = useState<HomeworkFilter>('todo');
   const [open, setOpen] = useState<ReadonlySet<number>>(new Set());
 
   const items = useMemo(() => (q.data ? visibleHomework(q.data.items, filter) : []), [q.data, filter]);
+  const stats = useMemo(() => homeworkStats(fullQ.data?.items ?? []), [fullQ.data]);
 
   if (q.isLoading) return <Loading />;
   if (q.isError || !q.data) return <ErrorState message={friendlyError(q.error)} onRetry={() => void q.refetch()} />;
@@ -139,7 +146,30 @@ function HomeworkBody({ child, all }: { child: ParentChild; all: ParentChild[] }
   return (
     <>
       <ChildChips items={all} selectedId={child.id} />
-      <Reveal index={0}>
+      {fullQ.data ? (
+        <Reveal index={0}>
+          <Card>
+            <View style={styles.statsTop}>
+              <AppText numberOfLines={1} ellipsizeMode="tail" style={{ flex: 1, fontFamily: fonts.semibold, fontSize: 17 }}>
+                {t('learn.homework.statsTitle')}
+              </AppText>
+              <AppText variant="caption" tabular style={{ fontSize: 13, minWidth: 40, textAlign: 'right' }}>
+                {`${stats.percentage}%`}
+              </AppText>
+            </View>
+            <AppText variant="caption" style={{ fontSize: 14, lineHeight: 21, marginTop: 6 }}>
+              {t('learn.homework.statsLine', { total: stats.total, done: stats.done, pending: stats.pending })}
+            </AppText>
+            <View style={{ marginTop: 10 }}>
+              <AnimatedBar ratio={progressFraction(stats.percentage)} delay={200} style={{ flex: 1 }} />
+            </View>
+            <View style={{ marginTop: 12 }}>
+              <PrimaryButton label={t('learn.homework.viewHistory')} onPress={() => router.push('/(app)/homework-history')} />
+            </View>
+          </Card>
+        </Reveal>
+      ) : null}
+      <Reveal index={1}>
         <Segmented options={options} value={filter} onChange={setFilter} label={t('learn.homework.showHomework')} />
       </Reveal>
       <Animated.View key={filter} entering={enterFade(1)}>
@@ -175,6 +205,7 @@ export default function HomeworkScreen() {
 const createStyles = ({ colors }: Theme) =>
   StyleSheet.create({
     item: { overflow: 'hidden' },
+    statsTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10 },
     itemPress: { padding: 18 },
     itemDivider: { borderBottomWidth: 1, borderBottomColor: colors.divider },
     itemTop: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' },

@@ -1,4 +1,4 @@
-import { doneBadge, dueBadge, feedbackLine, homeworkCounts, homeworkSubtitle, isDone, setByLine, visibleHomework } from '../homework';
+import { doneBadge, dueBadge, feedbackLine, homeworkCounts, homeworkStats, homeworkSubtitle, isDone, setByLine, visibleHomework } from '../homework';
 import type { HomeworkItem } from '@/types/parent';
 
 const item = (id: number, extra: Partial<HomeworkItem> = {}): HomeworkItem => ({
@@ -108,5 +108,11 @@ describe('copy', () => {
     expect(homeworkSubtitle('Aarav', { todo: 2, done: 1, all: 3 })).toBe('Aarav, 2 to do');
     expect(homeworkSubtitle('Aarav', { todo: 0, done: 1, all: 1 })).toBe('Aarav, all done');
     expect(homeworkSubtitle('Aarav', { todo: 0, done: 0, all: 0 })).toBe('Aarav');
+  });
+
+  it('summarises lifetime stats safely', () => {
+    expect(homeworkStats([])).toEqual({ total: 0, done: 0, pending: 0, percentage: 0 });
+    const items = [item(1, { status: 'submitted' }), item(2, { status: 'pending' }), item(3, { status: 'not_completed' })];
+    expect(homeworkStats(items)).toEqual({ total: 3, done: 1, pending: 2, percentage: 33 });
   });
 });

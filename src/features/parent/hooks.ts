@@ -24,7 +24,7 @@ export const queryKeys = {
   timetable: (id: number) => ['parent', id, 'timetable'] as const,
   exams: (id: number) => ['parent', id, 'exams'] as const,
   results: (id: number) => ['parent', id, 'results'] as const,
-  homework: (id: number) => ['parent', id, 'homework'] as const,
+  homework: (id: number, all = false) => ['parent', id, 'homework', all ? 'all' : 'recent'] as const,
   leave: (id: number) => ['parent', id, 'leave'] as const,
   invoice: (id: number, invoiceId: number) => ['parent', id, 'invoice', invoiceId] as const,
   profile: (id: number) => ['parent', id, 'profile'] as const,
@@ -110,8 +110,12 @@ export const useExams = (id: number | undefined) =>
 export const useResults = (id: number | undefined) =>
   useQuery({ queryKey: queryKeys.results(id ?? 0), queryFn: () => parentApi.results(id as number), enabled: enabled(id) });
 
-export const useHomework = (id: number | undefined) =>
-  useQuery({ queryKey: queryKeys.homework(id ?? 0), queryFn: () => parentApi.homework(id as number), enabled: enabled(id) });
+export const useHomework = (id: number | undefined, all = false) =>
+  useQuery({
+    queryKey: queryKeys.homework(id ?? 0, all),
+    queryFn: () => parentApi.homework(id as number, all),
+    enabled: enabled(id),
+  });
 
 export const useLeave = (id: number | undefined) =>
   useQuery({ queryKey: queryKeys.leave(id ?? 0), queryFn: () => parentApi.leave(id as number), enabled: enabled(id) });

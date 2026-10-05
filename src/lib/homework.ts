@@ -15,6 +15,21 @@ export const homeworkCounts = (items: HomeworkItem[]): Record<HomeworkFilter, nu
   return { todo: items.length - done, done, all: items.length };
 };
 
+export interface HomeworkStats {
+  total: number;
+  done: number;
+  pending: number;
+  percentage: number;
+}
+
+/** Lifetime stats for the History page: how much homework ever came, how much got done. */
+export function homeworkStats(items: readonly HomeworkItem[]): HomeworkStats {
+  const total = items.length;
+  const done = items.filter(isDone).length;
+  const pending = total - done;
+  return { total, done, pending, percentage: total > 0 ? Math.round((done / total) * 100) : 0 };
+}
+
 const dueSort = (a: HomeworkItem, b: HomeworkItem): number => {
   if (a.dueDate === b.dueDate) return b.assignedAt.localeCompare(a.assignedAt);
   if (!a.dueDate) return 1;

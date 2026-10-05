@@ -38,7 +38,8 @@ export function createParentService(client: ApiClient) {
     timetable: (id: number) => client.get<TimetableSlot[]>(`${child(id)}/timetable`),
     exams: (id: number) => client.get<ExamsData>(`${child(id)}/exams`),
     results: (id: number) => client.get<ResultsData>(`${child(id)}/results`),
-    homework: (id: number) => client.get<HomeworkData>(`${child(id)}/homework`),
+    homework: (id: number, all = false) =>
+      client.get<HomeworkData>(`${child(id)}/homework`, all ? { all: 'true' } : undefined),
     leave: (id: number) => client.get<LeaveData>(`${child(id)}/leave`),
     applyLeave: (id: number, input: LeaveInput) => client.post<LeaveNote>(`${child(id)}/leave`, input),
     invoice: (id: number, invoiceId: number) => client.get<InvoiceDetail>(`${child(id)}/invoices/${invoiceId}`),
