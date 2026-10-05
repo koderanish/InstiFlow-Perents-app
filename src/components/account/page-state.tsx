@@ -57,6 +57,9 @@ export function StaleBanner({ error, savedAt }: { error: unknown; savedAt: numbe
 /**
  * Shows loading, error or (when `isEmpty` says so) empty states for one query,
  * and the data otherwise. Saved data stays on screen with a banner if a refresh fails.
+ * A revalidation with no body (HTTP 304) arrives as `undefined` data: first
+ * load shows the skeleton, a background refresh keeps this contract by
+ * rendering the skeleton briefly instead of an error screen.
  */
 export function QueryBoundary<T>({
   query,
@@ -64,7 +67,7 @@ export function QueryBoundary<T>({
   empty,
   children,
 }: {
-  query: UseQueryResult<T>;
+  query: UseQueryResult<T | undefined>;
   isEmpty?: (data: T) => boolean;
   empty?: { title: string; message?: string };
   children: (data: T) => ReactNode;

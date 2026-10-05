@@ -25,7 +25,7 @@ export function createAuthService(client: ApiClient) {
         new_password: input.newPassword,
       });
     },
-    me(): Promise<AuthUser> {
+    me(): Promise<AuthUser | undefined> {
       return client.get<AuthUser>('/auth/me');
     },
     refresh(refreshToken: string): Promise<TokenPair> {

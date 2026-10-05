@@ -20,7 +20,7 @@ export type ApiErrorCode =
   | 'server_error'
   | 'unknown';
 
-const DEFAULT_TIMEOUT_MS = 15_000;
+const DEFAULT_TIMEOUT_MS = 30_000;
 
 function codeForStatus(status: number): ApiErrorCode {
   if (status === 0) return 'network_error';
@@ -128,7 +128,7 @@ export class ApiClient {
     this.onSessionExpired = handler;
   }
 
-  get<T>(path: string, query?: QueryParams, options?: Partial<RequestOptions>): Promise<T> {
+  get<T>(path: string, query?: QueryParams, options?: Partial<RequestOptions>): Promise<T | undefined> {
     return this.request<T>({ ...options, path, query, method: 'GET' });
   }
 
@@ -161,6 +161,13 @@ export class ApiClient {
       } else {
         throw new ApiError(401, 'Your session has expired. Please sign in again.');
       }
+    }
+
+    // A 304 on GET means "use what you have": conditional revalidation answered
+    // with no body. It is a success, not an error — callers treat missing data
+    // with their `??` fallbacks instead of showing an error screen.
+    if (response.status === 304 && (options.method ?? 'GET') === 'GET') {
+      return undefined as T;
     }
 
     return this.parse<T>(response);
