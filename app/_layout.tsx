@@ -58,6 +58,7 @@ function RootShell() {
   const brandingReady = useBrandingStore((s) => s.hydrated);
   const restoreBranding = useBrandingStore((s) => s.restore);
   const refreshBranding = useBrandingStore((s) => s.refresh);
+  const refreshParentBranding = useBrandingStore((s) => s.refreshForParent);
   const segments = useSegments();
   const router = useRouter();
   const [splashGone, setSplashGone] = useState(false);
@@ -81,13 +82,20 @@ function RootShell() {
     void restoreBranding().then(() => refreshBranding());
   }, [restoreBranding, refreshBranding]);
 
+  // Once signed in, the parent's own school decides the colour (the compiled-in code is only the first guess).
+  useEffect(() => {
+    if (status === 'authenticated') void refreshParentBranding();
+  }, [status, refreshParentBranding]);
+
   // Coming back to the app picks up a new logo or colour without a restart.
   useEffect(() => {
     const sub = AppState.addEventListener('change', (next) => {
-      if (next === 'active') void refreshBranding();
+      if (next !== 'active') return;
+      void refreshBranding();
+      if (status === 'authenticated') void refreshParentBranding();
     });
     return () => sub.remove();
-  }, [refreshBranding]);
+  }, [refreshBranding, refreshParentBranding, status]);
 
   const ready = fontsLoaded && prefsReady && brandingReady && (status === 'authenticated' || status === 'unauthenticated');
 

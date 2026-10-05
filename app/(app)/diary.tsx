@@ -186,7 +186,7 @@ const createStyles = ({ colors }: Theme) =>
     monthButton: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.bg, alignItems: 'center', justifyContent: 'center' },
     todayRow: { alignItems: 'flex-end', marginBottom: 6 },
     grid: { flexDirection: 'row', flexWrap: 'wrap' },
-    cell: { width: `${100 / 7}%`, height: 46, alignItems: 'center', justifyContent: 'center' },
+    cell: { width: '14.28%', height: 46, alignItems: 'center', justifyContent: 'center' },
     day: { width: 38, height: 44, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
     selected: { borderWidth: 2, borderColor: colors.accent },
     dot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.goodDot, marginTop: 2 },
