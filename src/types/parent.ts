@@ -62,6 +62,10 @@ export interface DiaryEntry {
   notes: string | null;
   progress: number;
   time: string | null;
+  /** logged = teacher wrote it; pending = timetable slot with no log yet. */
+  status: 'logged' | 'pending';
+  /** Timetable period name when matched to a slot, else null. */
+  period: string | null;
 }
 
 export interface TodayBus {

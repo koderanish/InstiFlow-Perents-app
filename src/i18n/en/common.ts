@@ -60,6 +60,6 @@ export const common = {
   'diary.title': 'Today in class',
   'diary.none': 'Nothing added by the teachers yet',
   'diary.updatedOf': '{done} of {total} classes updated',
-  'diary.updated_one': '{count} class updated',
+  'diary.pending': 'Pending — not logged yet',  'diary.updated_one': '{count} class updated',
   'diary.updated_other': '{count} classes updated',
 } as const;

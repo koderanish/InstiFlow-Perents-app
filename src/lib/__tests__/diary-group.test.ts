@@ -11,6 +11,8 @@ const entry = (over: Partial<DiaryEntry> = {}): DiaryEntry => ({
   notes: null,
   progress: 100,
   time: '08:00 - 08:40',
+  status: 'logged',
+  period: null,
   ...over,
 });
 
@@ -30,5 +32,14 @@ describe('groupDiaryBySubject', () => {
 
   it('returns no groups for no entries', () => {
     expect(groupDiaryBySubject([])).toEqual([]);
+  });
+
+  it('keeps pending entries grouped by subject like logged ones', () => {
+    const groups = groupDiaryBySubject([
+      entry({ subject: 'English', topic: null, homework: null, progress: 0, time: '08:40', status: 'pending', period: 'Period 2' }),
+      entry({ subject: 'Maths', topic: 'Fractions' }),
+    ]);
+    expect(groups.map((g) => g.subject)).toEqual(['English', 'Maths']);
+    expect(groups[0]?.entries[0]?.status).toBe('pending');
   });
 });

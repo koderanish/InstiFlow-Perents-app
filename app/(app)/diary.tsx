@@ -44,8 +44,14 @@ function DiaryCard({ group, index }: { group: DiarySubjectGroup; index: number }
           const topic = (entry.topic ?? '').trim();
           const breadcrumb = [unit, chapter].filter(Boolean).join(' → ');
           const showTopic = topic !== '' && topic.toLowerCase() !== chapter.toLowerCase();
+          const pending = entry.status === 'pending';
           return (
             <View key={i}>
+              {pending ? (
+                <AppText variant="caption" style={{ fontSize: 12, marginTop: 6, color: colors.accent, fontFamily: fonts.semibold }}>
+                  {t('diary.pending')}
+                </AppText>
+              ) : null}
               {breadcrumb ? <AppText style={{ fontSize: 15, lineHeight: 22, marginTop: 6 }}>{breadcrumb}</AppText> : null}
               {showTopic ? <AppText style={{ fontSize: 15, lineHeight: 22, marginTop: 6 }}>{topic}</AppText> : null}
               {entry.homework ? (

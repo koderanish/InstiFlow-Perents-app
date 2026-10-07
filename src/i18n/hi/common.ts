@@ -61,6 +61,7 @@ export const commonHi: Record<keyof typeof common, string> = {
   'diary.title': 'आज कक्षा में',
   'diary.none': 'शिक्षकों ने अभी कुछ नहीं जोड़ा है',
   'diary.updatedOf': '{total} में से {done} कक्षाओं का अपडेट आ गया',
+  'diary.pending': 'लंबित — अभी दर्ज नहीं हुआ',
   'diary.updated_one': '{count} कक्षा का अपडेट आ गया',
   'diary.updated_other': '{count} कक्षाओं का अपडेट आ गया',
 };
