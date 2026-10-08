@@ -1,6 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { AppearancePicker } from '@/components/account/appearance-picker';
@@ -28,6 +29,13 @@ export default function ProfileScreen() {
   const router = useRouter();
   const user = useAuthStore((s) => s.user);
   const logout = useAuthStore((s) => s.logout);
+  // Tier-1: logout awaits push-unregister + server call (~4s) — lock the row.
+  const [signingOut, setSigningOut] = useState(false);
+  const signOut = () => {
+    if (signingOut) return;
+    setSigningOut(true);
+    void logout().finally(() => setSigningOut(false));
+  };
   const select = useChildStore((s) => s.select);
   const language = usePrefsStore((s) => s.language);
   const { child, children: all, refetch, isRefetching } = useChildren();
@@ -143,7 +151,7 @@ export default function ProfileScreen() {
 
       <Reveal index={6}>
         <View style={styles.footer}>
-          <PressableScale accessibilityRole="button" accessibilityLabel={t('account.profile.signOut')} haptic="press" hitSlop={8} onPress={() => void logout()} style={styles.signOut}>
+          <PressableScale accessibilityRole="button" accessibilityLabel={t('account.profile.signOut')} haptic="press" hitSlop={8} onPress={signOut} disabled={signingOut} style={[styles.signOut, signingOut && styles.signingOut]}>
             <Feather name="log-out" size={16} color={colors.badFg} />
             <AppText style={{ fontFamily: fonts.semibold, fontSize: 15, color: colors.badFg }}>{t('account.profile.signOut')}</AppText>
           </PressableScale>
@@ -163,4 +171,5 @@ const createStyles = ({ colors }: Theme) =>
     viewing: { backgroundColor: colors.accentTint, borderRadius: 16, minHeight: 32, paddingHorizontal: 12, justifyContent: 'center' },
     footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 4 },
     signOut: { minHeight: 44, flexDirection: 'row', alignItems: 'center', gap: 8, paddingRight: 8 },
+    signingOut: { opacity: 0.55 },
   });

@@ -94,6 +94,8 @@ function LeaveForm({ child, teacher }: { child: ParentChild; teacher: string | n
       setError(check.message);
       return;
     }
+    // Tier-1 guard: the button disables a frame later — never fire twice.
+    if (apply.isPending) return;
     setError(null);
     apply.mutate(input, {
       onSuccess: () => {

@@ -78,6 +78,8 @@ export function useChatThread() {
   const studentId = useChildren().child?.id;
   const query = useMessagesQuery(focused);
   const [pending, setPending] = useState<PendingMessage[]>([]);
+  // Tier-1: bodies currently in flight (send dedupes by body while sending).
+  const sendingBodies = useRef<Set<string>>(new Set());
   /** Ids on screen when the conversation first loaded. Only bubbles outside this set animate in. */
   const [baseline, setBaseline] = useState<ReadonlySet<string> | null>(null);
 
@@ -101,6 +103,8 @@ export function useChatThread() {
       } catch {
         errorHaptic();
         setPending((list) => list.map((p) => (p.localId === localId ? { ...p, status: 'failed' } : p)));
+      } finally {
+        sendingBodies.current.delete(body);
       }
     },
     [queryClient],
@@ -111,6 +115,10 @@ export function useChatThread() {
     (raw: string): boolean => {
       const checked = validateMessage(raw);
       if (!checked.ok) return false;
+      // Tier-1 guard: a second tap while the same text is still sending must
+      // not mint a second clientId (the server dedupes by clientId only).
+      if (sendingBodies.current.has(checked.body)) return true;
+      sendingBodies.current.add(checked.body);
       const localId = makeLocalId();
       const pendingMessage: PendingMessage = {
         localId,
@@ -131,6 +139,9 @@ export function useChatThread() {
     (localId: string) => {
       const target = pending.find((p) => p.localId === localId);
       if (!target || target.status !== 'failed') return;
+      // Tier-1: same clientId resubmitted — server dedupes, but don't spam it.
+      if (sendingBodies.current.has(target.body)) return;
+      sendingBodies.current.add(target.body);
       setPending((list) => list.map((p) => (p.localId === localId ? { ...p, status: 'sending' } : p)));
       void submit(target);
     },
