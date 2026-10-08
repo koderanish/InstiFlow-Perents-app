@@ -10,6 +10,7 @@ import { useT, type TKey } from '@/i18n';
 import { PressableScale } from '@/motion/pressable-scale';
 import { SPRING_SNAPPY } from '@/motion/tokens';
 import { fonts, useStyles, useTheme, type Theme } from '@/theme';
+import { useReleasedGroups, isTabReleased } from './release-groups';
 
 type IoniconName = ComponentProps<typeof Ionicons>['name'];
 type BottomTabBarProps = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0];
@@ -38,12 +39,15 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
   const { colors } = useTheme();
   const [barWidth, setBarWidth] = useState(0);
 
+  // Release gate: unreleased tabs get no slot (backend still enforces).
+  const released = useReleasedGroups();
+  const visibleTabs = TABS.filter((tab) => isTabReleased(tab.name, released));
   const focusedRoute = state.routes[state.index];
-  const found = TABS.findIndex((tab) => tab.name === focusedRoute?.name);
+  const found = visibleTabs.findIndex((tab) => tab.name === focusedRoute?.name);
   const activeIndex = found === -1 ? 0 : found;
 
   // Equal slots inside the padded bar, so the pill position never depends on per-slot layout timing.
-  const slotWidth = Math.max(barWidth - BAR_H_PADDING * 2, 0) / TABS.length;
+  const slotWidth = Math.max(barWidth - BAR_H_PADDING * 2, 0) / Math.max(visibleTabs.length, 1);
   const pillCenterX = BAR_H_PADDING + activeIndex * slotWidth + slotWidth / 2;
 
   const pillX = useSharedValue(0);
@@ -60,7 +64,7 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
 
   const pillStyle = useAnimatedStyle(() => ({ opacity: barWidth ? 1 : 0, left: pillX.get() }));
 
-  const activeTab = TABS[activeIndex];
+  const activeTab = visibleTabs[activeIndex];
   const bottomInset = Math.max(insets.bottom, 14);
 
   const open = (name: string) => {
@@ -76,7 +80,7 @@ export function TabBar({ state, navigation }: BottomTabBarProps) {
       style={[styles.tabBar, { paddingBottom: bottomInset }]}
       onLayout={(event: LayoutChangeEvent) => setBarWidth(event.nativeEvent.layout.width)}
     >
-      {TABS.map((tab, index) => {
+      {visibleTabs.map((tab, index) => {
         const focused = index === activeIndex;
         return (
           <PressableScale
